@@ -1,5 +1,5 @@
-#ifndef ACTION_HANDLER_H
-#define ACTION_HANDLER_H
+#ifndef IR_REMOTE_H
+#define IR_REMOTE_H
 
 #include <IRremoteESP8266.h>
 #include <IRrecv.h>
@@ -10,7 +10,5 @@ public:
     uint16_t getCode();
     void sendCode(uint16_t code);
 };
-
-void blink(uint8_t PIN, float frequency);
 
 #endif 
