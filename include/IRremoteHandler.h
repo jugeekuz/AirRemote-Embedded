@@ -7,8 +7,8 @@
 class IRremote: public IRrecv, public IRsend{
 public:
     IRremote(uint8_t INPUT_PIN,uint8_t OUTPUT_PIN);
-    uint16_t getCode();
-    void sendCode(uint16_t code);
+    decode_results getCode();
+    void sendCode(uint64_t code);
 };
 
 #endif 

@@ -1,0 +1,11 @@
+{
+    "files.associations": {
+        "atomic": "cpp",
+        "cstdint": "cpp",
+        "*.tcc": "cpp",
+        "random": "cpp",
+        "sstream": "cpp",
+        "string": "cpp"
+    },
+    "cmake.configureOnOpen": false
+}

@@ -1,6 +1,6 @@
 //Used to handle actions by the esp, such as lighting leds reading remote codes etc
 
-#include "PeripheralHandler.h"
+#include "ActionHandler.h"
 
 //Used to make an LED blink at a specific frequency to provide some sort of validation
 void blink(uint8_t PIN, float frequency){
@@ -8,8 +8,10 @@ void blink(uint8_t PIN, float frequency){
     unsigned long previousMillis = 0;
     unsigned long currentMillis = millis();
     if (currentMillis - previousMillis >= interval) {
+
         previousMillis = currentMillis;
 
         digitalWrite(PIN, !digitalRead(PIN));
   }
 }
+
