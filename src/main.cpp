@@ -20,7 +20,8 @@
 
 IRremote irRemote(IR_INPUT, IR_OUTPUT);
 WiFiManager wifiManager;
-
+bool flag = true;
+bool wps_flag = false;
 void setup() {
   Serial.begin(921600);
 
@@ -35,20 +36,24 @@ void setup() {
   
   if(true){
    if (credentials.flag==EEPROM_VALIDITY_FLAG){
-    // TODO: Handle error scenarios + load from Flash
-    Serial.println("Found credentials");
-    wifiManager.setCredentials(WIFI_SSID, WIFI_PASSWORD);
-    wifiManager.connect(); 
-    Serial.println("Connected to WiFi Succesfully.");
+    // TODO: Handle error scenarios 
+    Serial.println("Found credentials in EEPROM flash memory.");
+    wifiManager.setCredentials(credentials.ssid, credentials.password);
+    wifiManager.connect(20); 
     }
   }
 }
 
 void loop() {
-  digitalWrite(LED_BLUE_PIN, WiFi.status() == WL_CONNECTED);
+  if(flag && WiFi.status() == WL_CONNECTED){
+    digitalWrite(LED_BLUE_PIN, HIGH);
+    if (wps_flag) wifiManager.saveWiFiCredentials();
+    flag = false;
+  }
   if(digitalRead(BUTTON_RIGHT_PIN)==LOW) {
     Serial.println("Attempting WPS Connection.");
-    delay(1000);
     wifiManager.connectWPS();
+    wps_flag = true;
+    delay(1000);
   }
 }

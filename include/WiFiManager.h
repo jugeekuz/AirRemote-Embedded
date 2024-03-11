@@ -8,6 +8,7 @@
 #define ESP_DEVICE_NAME   "ESP STATION"
 
 #define EEPROM_VALIDITY_FLAG 0xDEADBAD9
+#define EEPROM_BUFFER '+'
 
 #include <EEPROM.h>
 #include <WiFiMulti.h>
@@ -23,35 +24,39 @@ typedef enum{
     WPS_ERR} State;
 
 
-struct WiFiCredentials {
+struct EEPROMCredentials {
     char ssid[32];
     char password[64];
     uint32_t flag;
 };
-void wpsInitConfig();
-void wpsStart();
-void wpsStop();
-String wpspin2string(uint8_t a[]);
-void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info);
+struct WiFiCredentials{
+    const char * ssid;
+    const char * password;
+    uint32_t flag;
+};
 
-
-class WiFiManager : public WiFiMulti {
+class WiFiManager {
 public:
     // Constructors
     WiFiManager(); 
 
     void setCredentials(const char* WiFiSSID, const char* WiFiPass);
 
-    static void saveWiFiCredentials(const char *ssid,const char *password);
+    static const char * convertToString(const char input[]);
+    static void wpsInitConfig();
+    static void wpsStart();
+    static void wpsStop();
+    static String wpspin2string(uint8_t a[]);
+    static void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info);
+
+    void saveWiFiCredentials();
     static void loadWiFiCredentials(WiFiCredentials& credentials);
     // Member function to connect to WiFi
     void connectWPS();
-    void connect();
+    void connect(uint16_t timeout_s);
 protected:
     const char* SSID; 
     const char* passphrase;
-    bool WPS;
-
 };
 
 #endif 

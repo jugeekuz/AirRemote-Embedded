@@ -5,10 +5,9 @@ Can also connect through WPS and the credentials are saved to Flash.
 */
 
 #include "WiFiManager.h"
-
 State state = DISCONNECTED;
 
-void wpsInitConfig(){
+void WiFiManager::wpsInitConfig(){
   config.wps_type = ESP_WPS_MODE;
   strcpy(config.factory_info.manufacturer, ESP_MANUFACTURER);
   strcpy(config.factory_info.model_number, ESP_MODEL_NUMBER);
@@ -16,25 +15,21 @@ void wpsInitConfig(){
   strcpy(config.factory_info.device_name, ESP_DEVICE_NAME);
 }
 
-void wpsStart(){
-    esp_err_t err;
-    err = esp_wifi_wps_enable(&config); 
-    if(err){
+void WiFiManager::wpsStart(){
+    if(esp_wifi_wps_enable(&config)){
     	Serial.println("WPS Enable Failed");
     } else if(esp_wifi_wps_start(120000)){
     	Serial.println("WPS Start Failed");
-    }
-    Serial.println(err);
-    
+    }    
 }
 
-void wpsStop(){
+void WiFiManager::wpsStop(){
     if(esp_wifi_wps_disable()){
     	Serial.println("WPS Disable Failed");
     }
 }
 
-String wpspin2string(uint8_t a[]){
+String WiFiManager::wpspin2string(uint8_t a[]){
   char wps_pin[9];
   for(int i=0;i<8;i++){
     wps_pin[i] = a[i];
@@ -43,7 +38,7 @@ String wpspin2string(uint8_t a[]){
   return (String)wps_pin;
 }
 
-void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info){
+void WiFiManager::WiFiEvent(WiFiEvent_t event, arduino_event_info_t info){
   switch(event){
     case ARDUINO_EVENT_WIFI_STA_START:
       Serial.println("Station Mode Started");
@@ -82,22 +77,23 @@ void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info){
   }
 }
 
-WiFiManager::WiFiManager(): WiFiMulti(), 
-                            WPS(true){}
+WiFiManager::WiFiManager(){}
 
 void WiFiManager::setCredentials(const char* WiFiSSID, const char* WiFiPass){
     this->SSID = WiFiSSID;
     this->passphrase= WiFiPass;
-    this->WPS = false;
 }
-
 //Function that saves WiFi credentials into EEPROM flash memory to use after WPS setup.
-void WiFiManager::saveWiFiCredentials(const char *ssid,const char *password) {
-    WiFiCredentials credentials;
+void WiFiManager::saveWiFiCredentials() {
+    if (WiFi.status()!=WL_CONNECTED){
+        Serial.println("Not connected. Unable to save credentials.");
+        return ;
+    }
+    EEPROMCredentials credentials;
 
-    //Initialize credentials with '+' so that we know when credentials end.
-    memset(credentials.ssid, '+', sizeof(credentials.ssid)-1);
-    memset(credentials.password, '+', sizeof(credentials.password)-1);
+    //Initialize credentials with EEPROM_BUFFER so that we know when credentials end.
+    memset(credentials.ssid, EEPROM_BUFFER, sizeof(credentials.ssid)-1);
+    memset(credentials.password, EEPROM_BUFFER, sizeof(credentials.password)-1);
 
     //Put a flag to know data being read is valid.
     credentials.flag = EEPROM_VALIDITY_FLAG;
@@ -107,10 +103,10 @@ void WiFiManager::saveWiFiCredentials(const char *ssid,const char *password) {
     credentials.password[sizeof(credentials.password)-1] = '\0';
 
     //Copy the remaining ssid / password given into the buffered string.
-    strncpy(credentials.ssid, ssid, strlen(ssid));
-    strncpy(credentials.password, password, strlen(password));
+    strncpy(credentials.ssid, WiFi.SSID().c_str(), strlen(WiFi.SSID().c_str()));
+    strncpy(credentials.password, WiFi.psk().c_str(), strlen(WiFi.psk().c_str()));
 
-    EEPROM.begin(sizeof(WiFiCredentials));
+    EEPROM.begin(sizeof(EEPROMCredentials));
     EEPROM.put(0, credentials);
     if (EEPROM.commit()){
         Serial.println("Successfully saved credentials into EEPROM flash memory.");
@@ -118,31 +114,67 @@ void WiFiManager::saveWiFiCredentials(const char *ssid,const char *password) {
         Serial.println("Couldn't save credentials into EEPROM flash memory.");
     }
 }
+const char* WiFiManager::convertToString(const char input[]) {
+    size_t length = strlen(input);
+    size_t actual_length = 0;
+
+    // Copy characters from input to result, excluding EEPROM_BUFFER
+    uint8_t i=0;
+    while (input[i] != EEPROM_BUFFER && i<(length-1)) {
+        actual_length++;
+        i++;
+    }
+    char* result = new char[actual_length + 1];
+    i = 0;
+    while (input[i] != EEPROM_BUFFER && i<(length-1)) {
+        result[i] = input[i];
+        i++;
+    }
+    // Add null terminator to the result
+    result[i] = '\0';
+    return result;
+}
 
 //Function that loads WiFi credentials from EEPROM flash memory and checks if they're valid.
 void WiFiManager::loadWiFiCredentials(WiFiCredentials& credentials) {
-    EEPROM.begin(sizeof(WiFiCredentials));
-    EEPROM.get(0, credentials);
+    EEPROMCredentials eeprom_credentials;
+    Serial.println("Loading credentials from EEPROM memory..");
+    EEPROM.begin(sizeof(EEPROMCredentials));
+    EEPROM.get(0, eeprom_credentials);
+
+    credentials.flag = eeprom_credentials.flag;
+    credentials.ssid = convertToString(eeprom_credentials.ssid);
+    credentials.password = convertToString(eeprom_credentials.password);
+
 }
 
 //Connect via WPS to be implemented by the press of a button
 void WiFiManager::connectWPS() {
     WiFi.onEvent(WiFiEvent);
     WiFi.mode(WIFI_MODE_STA);
+    state = WPS_CONNECTION;
+    Serial.println("Starting WPS Connection.");
+    wpsInitConfig();
     wpsStart();
-    if (WiFi.status()==WL_CONNECTED) saveWiFiCredentials(WiFi.SSID().c_str(), WiFi.psk().c_str());
 }
 
 //Function that recurrently calls attemptConnect() until it works
-void WiFiManager::connect() {
-    addAP(SSID, passphrase);
-    run(0);
+void WiFiManager::connect(uint16_t timeout_s=20) {
     uint32_t attempts = 0;
-
-    while (WiFi.status() != WL_CONNECTED && attempts < 1000){
+    const uint16_t time_delay = 300;
+    WiFiMulti multi;
+    multi.addAP(SSID, passphrase);
+    multi.run();
+    while (WiFi.status() != WL_CONNECTED){
         attempts++;
         Serial.println("Attempting to connect to WiFi.");
-        run(0);
-        delay(300);
+        multi.run();
+        if(attempts*time_delay > timeout_s*1000){
+            Serial.println("Time out reached.");
+            return;
+        }
+        delay(time_delay);
     }
+    Serial.print("Successfully connected to WiFi: ");
+    Serial.println(WiFi.SSID());
 }
