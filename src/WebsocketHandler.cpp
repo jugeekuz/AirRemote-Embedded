@@ -1,53 +1,44 @@
 /*
-Class that is used as a gateway between Azure and ESP.
+Class that is used as a gateway between AWS and ESP.
 */
 #define MSG_SIZE 256 
 
 #include "WebsocketHandler.h"
 
+WebSocketsClient wsClient;
+IRremote irRemote(IR_INPUT, IR_OUTPUT);
 
-WebSocketAzure::WebSocketAzure(IRremote &ir_remote,
-                               char *ws_host,
-                               uint8_t ws_port,
-                               char *ws_url,
-                               char *ws_fingerprint, 
-                               char *ws_protocol) 
-                               : WebSocketsClient(),
-                                 ir_remote(ir_remote){
-    this->ws_host = ws_host;
-    this->ws_port = ws_port;
-    this->ws_url = ws_url;
-    this->ws_fingerprint = ws_fingerprint;
-    this->ws_protocol = ws_protocol;
-}
 
-void WebSocketAzure::sendMessage(const char *type, 
+WebSocketAWS::WebSocketAWS() {}
+
+
+void WebSocketAWS::sendMessage(const char *type, 
                                  const char *error){
     //TODO : Change json format
     char msg[MSG_SIZE];
 
     sprintf(msg, "{\"action\":\"msg\",\"type\":\"%s\", \"body\":\"%s\"}",type, error);
 
-    sendTXT(msg);
-}
+    wsClient.sendTXT(msg);
 
-void WebSocketAzure::handleCommand(JsonDocument doc){
+}
+void WebSocketAWS::handleCommand(JsonDocument doc){
     //TODO: Implement other protocols bit/sizes
 
     if (strcmp(doc["body"]["type"], "receive")==0){    
         //Convert string to uint16_t
-        decode_results remote_code = ir_remote.getCode();
+        decode_results remote_code = irRemote.getCode();
         std::string hex_code = std::to_string(remote_code.value);
         sendMessage("code", hex_code.c_str());
     }
 
     if (strcmp(doc["body"]["type"], "send")==0){
-        ir_remote.sendCode(doc["body"]["code"]);
+        irRemote.sendCode(doc["body"]["code"]);
         sendMessage("confirmation", "ok");
     }
 }
 
-void WebSocketAzure::handleMessage(uint8_t * payload){
+void WebSocketAWS::handleMessage(uint8_t * payload){
     //TODO: handle different types of errors
 
     JsonDocument doc;
@@ -72,12 +63,11 @@ void WebSocketAzure::handleMessage(uint8_t * payload){
             return;
         }
         handleCommand(doc);
-        
     }
 }
 
 
-void WebSocketAzure::onWSEvent(WStype_t type, 
+void WebSocketAWS::onWSEvent(WStype_t type, 
                                uint8_t * payload, 
                                size_t length) {
     switch (type){
@@ -91,17 +81,20 @@ void WebSocketAzure::onWSEvent(WStype_t type,
             Serial.printf("WebSocket Message: %s\n", payload);
             handleMessage(payload);
             break;
+        default:
+            Serial.print("Received type: " );
+            Serial.println(type);
         //case WStype_ERROR:
         
     }
 }
-void WebSocketAzure::startConnection(char *ws_host, 
-                                     uint8_t ws_port, 
-                                     char *ws_url,
-                                     char *ws_fingerprint, 
-                                     char *ws_protocol){
-    beginSSL(ws_host, ws_port, ws_url, ws_fingerprint, ws_protocol);
-    onEvent([this](WStype_t type, uint8_t *payload, size_t length) {
-        this->onWSEvent(type, payload, length);
-    });
+
+void WebSocketAWS::startConnection(const char *ws_host, 
+                                   uint16_t ws_port, 
+                                   const char *ws_url,
+                                   const char *ws_fingerprint, 
+                                   const char *ws_protocol){
+    
+    wsClient.beginSSL(ws_host, ws_port, ws_url, ws_fingerprint, ws_protocol);
+    wsClient.onEvent(onWSEvent);
 }
