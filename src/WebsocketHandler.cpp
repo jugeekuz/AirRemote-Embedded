@@ -4,13 +4,15 @@ Class that is used as a gateway between AWS and ESP.
 #define MSG_SIZE 256 
 
 #include "WebsocketHandler.h"
-
 WebSocketsClient wsClient;
 IRremote irRemote(IR_INPUT, IR_OUTPUT);
 
 
 WebSocketAWS::WebSocketAWS() {}
 
+void WebSocketAWS::loop() { wsClient.loop(); }
+
+bool WebSocketAWS::isConnected() { return wsClient.isConnected(); }
 
 void WebSocketAWS::sendMessage(const char *type, 
                                  const char *error){
@@ -42,7 +44,6 @@ void WebSocketAWS::handleMessage(uint8_t * payload){
     //TODO: handle different types of errors
 
     JsonDocument doc;
-
     DeserializationError error = deserializeJson(doc, payload);
 
     if (error){
@@ -84,6 +85,7 @@ void WebSocketAWS::onWSEvent(WStype_t type,
         default:
             Serial.print("Received type: " );
             Serial.println(type);
+            break;
         //case WStype_ERROR:
         
     }
@@ -94,7 +96,8 @@ void WebSocketAWS::startConnection(const char *ws_host,
                                    const char *ws_url,
                                    const char *ws_fingerprint, 
                                    const char *ws_protocol){
-    
-    wsClient.beginSSL(ws_host, ws_port, ws_url, ws_fingerprint, ws_protocol);
+
+   
+    wsClient.beginSSL(ws_host, ws_port, ws_url, "", ws_protocol);
     wsClient.onEvent(onWSEvent);
 }

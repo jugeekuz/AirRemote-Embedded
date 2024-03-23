@@ -159,20 +159,14 @@ void WiFiManager::connectWPS() {
 }
 
 //Function that recurrently calls attemptConnect() until it works
-void WiFiManager::connect(uint16_t timeout_s=20) {
+void WiFiManager::connect(uint16_t timeout_s) {
     uint32_t attempts = 0;
     const uint16_t time_delay = 300;
     WiFiMulti multi;
     multi.addAP(SSID, passphrase);
-    multi.run();
-    while (WiFi.status() != WL_CONNECTED){
+    while (multi.run() != WL_CONNECTED && attempts*time_delay){
         attempts++;
         Serial.println("Attempting to connect to WiFi.");
-        multi.run();
-        if(attempts*time_delay > timeout_s*1000){
-            Serial.println("Time out reached.");
-            return;
-        }
         delay(time_delay);
     }
     Serial.print("Successfully connected to WiFi: ");
