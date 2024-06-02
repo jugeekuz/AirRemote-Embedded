@@ -7,13 +7,11 @@
 #define ESP_MODEL_NAME    "ESPRESSIF IOT"
 #define ESP_DEVICE_NAME   "ESP STATION"
 
-#define EEPROM_VALIDITY_FLAG 0xDEADBAD0
-#define EEPROM_BUFFER '+'
-
 #include <EEPROM.h>
 #include <WiFiMulti.h>
 #include "WiFi.h"
 #include "esp_wps.h"
+#include "utils.h"
 
 static esp_wps_config_t config;
 
@@ -24,39 +22,36 @@ typedef enum{
     WPS_ERR} State;
 
 
-struct EEPROMCredentials {
-    char ssid[32];
+struct eepromcredentials_t {
+    char ssid[33];
     char password[64];
-    uint32_t flag;
+    uint8_t checksum;
 };
+
 struct WiFiCredentials{
     const char * ssid;
     const char * password;
-    uint32_t flag;
 };
 
 class WiFiManager {
 public:
-    // Constructors
     WiFiManager(); 
-
     void setCredentials(const char* WiFiSSID, const char* WiFiPass);
-
-    static const char * convertToString(const char input[]);
-    static void wpsInitConfig();
-    static void wpsStart();
+    void setCredentials(WiFiCredentials credentials);
     static void wpsStop();
-    static String wpspin2string(uint8_t a[]);
-    static void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info);
-
-    void saveWiFiCredentials();
-    static void loadWiFiCredentials(WiFiCredentials& credentials);
-    // Member function to connect to WiFi
+    void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info);
+    bool saveWiFiCredentials();
+    bool loadWiFiCredentials();
     void connectWPS();
     void connect(uint16_t timeout_s);
-protected:
+    String macAddress();
+    wl_status_t status();
+    State state = DISCONNECTED;
+    
+private:
+    eepromcredentials_t eeprom_credentials;
     const char* SSID; 
-    const char* passphrase;
+    const char* password;
 };
 
 #endif 

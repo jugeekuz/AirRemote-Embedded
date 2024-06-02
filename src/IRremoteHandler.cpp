@@ -4,32 +4,52 @@ Class that is used to receive and send IR codes of different protocols.
 
 #include "IRremoteHandler.h"
 
-
-
-IRremote::IRremote(uint8_t INPUT_PIN,uint8_t OUTPUT_PIN): IRrecv(INPUT_PIN), IRsend(OUTPUT_PIN){
+IRremote::IRremote(uint8_t INPUT_PIN, uint8_t OUTPUT_PIN,  LED** feedbackLED): IRrecv(INPUT_PIN, BIG_IR_BUFFER_SIZE), IRsend(OUTPUT_PIN), feedbackLED(feedbackLED){
+    enableIRIn();
+    begin();
+}
+IRremote::IRremote(uint8_t INPUT_PIN,uint8_t OUTPUT_PIN, uint8_t timeout,  LED** feedbackLED): IRrecv(INPUT_PIN, BIG_IR_BUFFER_SIZE, timeout), IRsend(OUTPUT_PIN){
     enableIRIn();
     begin();
 }
 
-//Function that is used to receive 16-bit code.
-decode_results IRremote::getCode(){
-    decode_results results;
-    uint32_t total_delay = 0;
-    while(total_delay<500){
-        if(decode(&results)){ 
-            delay(10);
+bool IRremote::getCode(decode_results *results, uint16_t timeout_s){
+    unsigned long startTime = millis();
+
+    (*feedbackLED)->blink(10, 10);
+    while (millis() - startTime < timeout_s*1000){
+        if (decode(results)) {
             resume();
-            return results;
+            Serial.println("Received code");
+            
+            (*feedbackLED)->blink(6, 10);
+
+            return true;  
         }
-        delay(50);
-        total_delay += 50;
     }
-    return results;
+    Serial.println("Code reading has reached a timeout");
+    (*feedbackLED)->blink(1, 5);
+    return false;
+}
+bool IRremote::getCode(decode_results *results){
+
+    (*feedbackLED)->blink(2, 5);
+
+    if (decode(results)) {
+        resume();
+        return true;
+        (*feedbackLED)->blink(5, 6);  
+    }
+    return false;
+}
+
+void IRremote::sendCode(uint16_t * raw_array, size_t raw_len){
+    sendRaw(raw_array, raw_len, 38);
+    Serial.println("Succesfully sent code.");
+    return;
 }
 
 
-void IRremote::sendCode(uint64_t code){
-    sendNEC(code, 32);
-    Serial.println("Succesfully sent code.");
-    return;
+char* IRremote::resultsToPayload(decode_results *results, char *buffer){
+    return buffer;
 }

@@ -1,12 +1,10 @@
 #include <Arduino.h>
-// #include <WebSocketsClient.h>
-#include "WiFiManager.h"
 #include <ArduinoJson.h>
-#include "ActionHandler.h"
+#include "WiFiManager.h"
+#include "IRremoteHandler.h"
 #include "WebsocketHandler.h"
 
-#define WIFI_SSID "COSMOTE-665216"
-#define WIFI_PASSWORD "tasos2021"
+#include "utils.h"
 
 #define BUTTON_RIGHT_PIN 21
 #define BUTTON_LEFT_PIN 35
@@ -14,50 +12,68 @@
 #define LED_YELLOW_PIN 16
 #define LED_BLUE_PIN 18
 
+#define IR_INPUT 15
+#define IR_OUTPUT 4
+
 #define WS_HOST "fofo64r8il.execute-api.eu-central-1.amazonaws.com"
 #define WS_PORT 443
 #define WS_URL "/dev"
+#define API_GATEWAY_TIMEOUT_MINUTES 10
 
-// IRremote irRemote(IR_INPUT, IR_OUTPUT);
+LED* remoteLED = nullptr;
+LED* wifiLED = nullptr;
+IRremote* irRemote = nullptr;
+
+WebSocketAWS webSocket(&irRemote);
 WiFiManager wifiManager;
-WebSocketAWS webSocket;
+
+String query_parameters = WS_URL;
+uint64_t startTime;
 
 bool flag = true;
-bool wps_flag = false;
-bool ws_flag = true;
 void setup() {
   Serial.begin(921600);
-
-  pinMode(LED_BLUE_PIN, OUTPUT);
-  pinMode(LED_YELLOW_PIN, OUTPUT);
   pinMode(BUTTON_LEFT_PIN, INPUT_PULLUP);
   pinMode(BUTTON_RIGHT_PIN, INPUT_PULLUP);
 
+  remoteLED = new LED(LED_YELLOW_PIN);
+  wifiLED = new LED(LED_BLUE_PIN);
+
+  irRemote = new IRremote(IR_INPUT, IR_OUTPUT, &remoteLED);
+
   WiFiCredentials credentials;
-  WiFiManager::loadWiFiCredentials(credentials);
+  wifiLED->blink(3, 5);
+
+  if (wifiManager.loadWiFiCredentials()) wifiManager.connect(10);
   
-  if (credentials.flag==EEPROM_VALIDITY_FLAG){
-    // TODO: Handle error scenarios 
-    Serial.println("Found valid credentials in EEPROM flash memory.");
-    wifiManager.setCredentials(credentials.ssid, credentials.password);
-    wifiManager.connect(20);
-    delay(1000);
-  }
 
-  if (WiFi.status() != WL_CONNECTED){
-    Serial.println("WiFi Connection Failed. Waiting for WPS Button.");
-    //Blocking code
-    while (digitalRead(BUTTON_RIGHT_PIN)!=LOW);
+  if (wifiManager.status() != WL_CONNECTED){
+
+    while(digitalRead(BUTTON_RIGHT_PIN)==HIGH) remoteLED->blink(1,1);
+
     wifiManager.connectWPS();
-    //Blocking code
-    while (WiFi.status() != WL_CONNECTED);
-    wifiManager.saveWiFiCredentials();
-  }
-  digitalWrite(LED_BLUE_PIN, HIGH);
 
-  webSocket.startConnection(WS_HOST, WS_PORT, WS_URL, "", "wss");
+    while (WiFi.status() != WL_CONNECTED);
+  }
+  
+  wifiLED->blink(8,5);
+  
+  query_parameters += "?deviceType=iot&macAddress=";
+  query_parameters += wifiManager.macAddress();
+  webSocket.startConnection(WS_HOST, WS_PORT, query_parameters.c_str(), "", "wss");
+  webSocket.enableHeartbeat(3*1000, 5*1000,1);
+  wifiLED->setState(HIGH);
+
+  startTime = millis();
 }
+
+
 void loop() {
-  if(webSocket.isConnected()) digitalWrite(LED_YELLOW_PIN, HIGH);
   webSocket.loop();
+  // Let 10 seconds pass for the webSocket to connect to not flood connection requests
+  if((millis() - startTime >= 10000) && !webSocket.isConnected()){
+    webSocket.startConnection(WS_HOST, WS_PORT, query_parameters.c_str(), "", "wss");
+    startTime = millis();
+  }
+  
 }
