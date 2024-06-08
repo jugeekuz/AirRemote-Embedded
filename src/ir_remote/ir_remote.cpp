@@ -2,7 +2,7 @@
 Class that is used to receive and send IR codes of different protocols.
 */
 
-#include "IRremoteHandler.h"
+#include "ir_remote/ir_remote.h"
 
 IRremote::IRremote(uint8_t INPUT_PIN, uint8_t OUTPUT_PIN,  LED** feedbackLED): IRrecv(INPUT_PIN, BIG_IR_BUFFER_SIZE), IRsend(OUTPUT_PIN), feedbackLED(feedbackLED){
     enableIRIn();
@@ -13,6 +13,7 @@ IRremote::IRremote(uint8_t INPUT_PIN,uint8_t OUTPUT_PIN, uint8_t timeout,  LED**
     begin();
 }
 
+// This function accepts IR codes for a `timeout_s` seconds, and saves it in the `results` variable.
 bool IRremote::getCode(decode_results *results, uint16_t timeout_s){
     unsigned long startTime = millis();
 
@@ -31,6 +32,8 @@ bool IRremote::getCode(decode_results *results, uint16_t timeout_s){
     (*feedbackLED)->blink(1, 5);
     return false;
 }
+
+// This function accepts IR codes and saves it in the `results` variable.
 bool IRremote::getCode(decode_results *results){
 
     (*feedbackLED)->blink(2, 5);
@@ -43,6 +46,7 @@ bool IRremote::getCode(decode_results *results){
     return false;
 }
 
+// This function sends the IR code that is stored in the `raw_array` variable in raw format.
 void IRremote::sendCode(uint16_t * raw_array, size_t raw_len){
     sendRaw(raw_array, raw_len, 38);
     Serial.println("Succesfully sent code.");

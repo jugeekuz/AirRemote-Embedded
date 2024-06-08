@@ -16,8 +16,8 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <WebSocketsClient.h>
-#include "utils.h"
-#include "IRremoteHandler.h"
+#include "utils/utils.h"
+#include "ir_remote/ir_remote.h"
 
 /**
  * @brief A class to handle WebSocket Connections.
@@ -31,7 +31,7 @@ public:
     void handleExecuteCommand(const char * requestId, const char * commandSize, const char * buttonCode);
     void handleReadCommand(const char * requestId);
     void sendErrorMessage(const char * requestId, const char * error);
-    void onWSEvent(WStype_t type, uint8_t * payload, size_t length);
+    void wsEventCallback(WStype_t type, uint8_t * payload, size_t length);
     void handleMessage(uint8_t * payload);
     void startConnection(const char *ws_host, uint16_t ws_port, const char *ws_url,const char *ws_fingerprint, const char *ws_protocol);
     bool isConnected();

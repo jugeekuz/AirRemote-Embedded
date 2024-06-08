@@ -1,10 +1,10 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
-#include "WiFiManager.h"
-#include "IRremoteHandler.h"
-#include "WebsocketHandler.h"
-
-#include "utils.h"
+#include "wifi_handler/wifi_handler.h"
+#include "ir_remote/ir_remote.h"
+#include "websocket_handler/websocket_handler.h"
+#include "async_led/async_led.h"
+#include "utils/utils.h"
 
 #define BUTTON_RIGHT_PIN 21
 #define BUTTON_LEFT_PIN 35
@@ -25,7 +25,7 @@ LED* wifiLED = nullptr;
 IRremote* irRemote = nullptr;
 
 WebSocketAWS webSocket(&irRemote);
-WiFiManager wifiManager;
+WiFiHandler WiFiHandler;
 
 String query_parameters = WS_URL;
 uint64_t startTime;
@@ -44,14 +44,14 @@ void setup() {
   WiFiCredentials credentials;
   wifiLED->blink(3, 5);
 
-  if (wifiManager.loadWiFiCredentials()) wifiManager.connect(10);
+  if (WiFiHandler.loadWiFiCredentials()) WiFiHandler.connect(10);
   
 
-  if (wifiManager.status() != WL_CONNECTED){
+  if (WiFiHandler.status() != WL_CONNECTED){
 
     while(digitalRead(BUTTON_RIGHT_PIN)==HIGH) remoteLED->blink(1,1);
 
-    wifiManager.connectWPS();
+    WiFiHandler.connectWPS();
 
     while (WiFi.status() != WL_CONNECTED);
   }
@@ -59,7 +59,7 @@ void setup() {
   wifiLED->blink(8,5);
   
   query_parameters += "?deviceType=iot&macAddress=";
-  query_parameters += wifiManager.macAddress();
+  query_parameters += WiFiHandler.macAddress();
   webSocket.startConnection(WS_HOST, WS_PORT, query_parameters.c_str(), "", "wss");
   webSocket.enableHeartbeat(3*1000, 5*1000,1);
   wifiLED->setState(HIGH);
@@ -75,5 +75,4 @@ void loop() {
     webSocket.startConnection(WS_HOST, WS_PORT, query_parameters.c_str(), "", "wss");
     startTime = millis();
   }
-  
 }

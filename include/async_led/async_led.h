@@ -1,14 +1,7 @@
-#ifndef UTILS_H
-#define UTILS_H
+#ifndef ASYNC_LED_H
+#define ASYNC_LED_H
 
 #include <Arduino.h>
-namespace Utils {
-    void arrayToString(volatile uint16_t* input, size_t len, char* buffer);
-    uint8_t calculateChecksum(uint8_t* data, size_t len);
-    void stringToArray(const char * input, size_t len, uint16_t* buffer);
-    String wpspin2string(uint8_t a[]);
-    
-}
 struct BlinkParameters {
     uint8_t pin;
     uint8_t frequency;

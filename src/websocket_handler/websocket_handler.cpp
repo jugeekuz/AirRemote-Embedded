@@ -2,9 +2,7 @@
 Class that is used as a gateway between AWS and ESP.
 */
 
-#include <string>
-#include "WebsocketHandler.h"
-#include "utils.h"
+#include "websocket_handler/websocket_handler.h"
 
 WebSocketAWS::WebSocketAWS(IRremote** irRemote): irRemote(irRemote), wsClient() {}
 
@@ -30,7 +28,6 @@ void WebSocketAWS::enableHeartbeat(uint32_t pingInterval, uint32_t pongTimeout, 
 void WebSocketAWS::sendErrorMessage(const char * requestid, const char * body){
     char error_msg[ERROR_RESPONSE_LENGTH];
     sprintf(error_msg, "{\"action\":\"error\",\"requestId\":\"%s\",\"body\":\"%s\"}", requestid, body);
-    Serial.println(error_msg);
     sendTXT(error_msg);
 }
 
@@ -48,25 +45,22 @@ void WebSocketAWS::handleExecuteCommand(const char * requestId, const char * com
 
         char payload[ACK_RESPONSE_LENGTH];
         sprintf(payload, "{\"action\":\"ack\",\"requestId\":\"%s\"}", requestId);
-        Serial.println("Sending response : ");
-        Serial.println(payload);
+
         sendTXT(payload);
 
     } catch (const std::bad_alloc& e) {
-        Serial.printf("[ERROR] Memory allocation failed: %s\n",e.what());
+        Serial.printf("[WSc][ERROR] Memory allocation failed: %s\n",e.what());
 
-        sendErrorMessage(requestId, "[ERROR] Memory allocation failed");
+        sendErrorMessage(requestId, "[WSc][ERROR] Memory allocation failed");
 
         return;
     } catch (...) {
         delete[] raw_buffer;
 
-        Serial.println("[ERROR] An Unknown error occured.");
+        Serial.println("[WSc][ERROR] An Unknown error occured.");
 
-        sendErrorMessage(requestId, "[ERROR] An Unknown error occured.");
-    }
-    
-    
+        sendErrorMessage(requestId, "[WSc][ERROR] An Unknown error occured.");
+    }    
 }
 
 void WebSocketAWS::handleReadCommand(const char * requestId){
@@ -84,8 +78,6 @@ void WebSocketAWS::handleReadCommand(const char * requestId){
             Utils::arrayToString(resultToRawArray(&results), results.rawlen, response_payload);
             strcat(response_payload, "}");
 
-            Serial.println("Sending response : ");
-            Serial.println(response_payload);
             sendTXT(response_payload);
 
             delete[] response_payload;
@@ -93,21 +85,21 @@ void WebSocketAWS::handleReadCommand(const char * requestId){
 
             Serial.printf("[ERROR] Memory allocation failed: %s\n",e.what());
 
-            sendErrorMessage(requestId, "[ERROR] Memory allocation failed");
+            sendErrorMessage(requestId, "[WSc][ERROR] Memory allocation failed");
 
             return;
 
         } catch (...) {
             delete[] response_payload;
 
-            Serial.println("[ERROR] An Unknown error occured.");
+            Serial.println("[WSc][ERROR] An Unknown error occured.");
 
-            sendErrorMessage(requestId, "[ERROR] An Unknown error occured.");
+            sendErrorMessage(requestId, "[WSc][ERROR] An Unknown error occured.");
 
         }
 
     } else {
-        sendErrorMessage(requestId, "[ERROR] No code was received.");
+        sendErrorMessage(requestId, "[WSc][ERROR] No code was received.");
     }
 
 }
@@ -158,7 +150,7 @@ void WebSocketAWS::handleMessage(uint8_t * request_payload){
     
 }
 
-void WebSocketAWS::onWSEvent(WStype_t type, 
+void WebSocketAWS::wsEventCallback(WStype_t type, 
                              uint8_t * payload, 
                              size_t length) {
     switch (type){
@@ -173,9 +165,13 @@ void WebSocketAWS::onWSEvent(WStype_t type,
             Serial.println("[WSc] Disconnected.");
             break;       
         case WStype_ERROR:   
+            Serial.println("[WSc] Encountered an error.");
+            break;
+        case WStype_PONG:
+            Serial.println("[WSc] Received PONG.");
             break;
         default:
-            // Serial.print("Received type: " );
+            Serial.print("[WSc] Received type: ");
             Serial.println(type);
             break;        
     }
@@ -190,7 +186,7 @@ void WebSocketAWS::startConnection(const char *ws_host,
     this->wsClient.beginSSL(ws_host, ws_port, ws_url, "", ws_protocol);
     
     WebSocketsClient::WebSocketClientEvent cbEvent = [this](WStype_t type, uint8_t * payload, size_t length){
-        onWSEvent(type, payload, length);
+        wsEventCallback(type, payload, length);
     };
 
     this->wsClient.onEvent(cbEvent);

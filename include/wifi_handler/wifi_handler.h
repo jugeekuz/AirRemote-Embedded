@@ -1,5 +1,5 @@
-#ifndef WIFI_MANAGER_H
-#define WIFI_MANAGER_H
+#ifndef WIFI_HANDLER_H
+#define WIFI_HANDLER_H
 
 #define ESP_WPS_MODE      WPS_TYPE_PBC
 #define ESP_MANUFACTURER  "ESPRESSIF"
@@ -11,7 +11,7 @@
 #include <WiFiMulti.h>
 #include "WiFi.h"
 #include "esp_wps.h"
-#include "utils.h"
+#include "./utils/utils.h"
 
 static esp_wps_config_t config;
 
@@ -22,24 +22,14 @@ typedef enum{
     WPS_ERR} State;
 
 
-struct eepromcredentials_t {
-    char ssid[33];
-    char password[64];
-    uint8_t checksum;
-};
-
-struct WiFiCredentials{
-    const char * ssid;
-    const char * password;
-};
-
-class WiFiManager {
+class WiFiHandler {
 public:
-    WiFiManager(); 
+    WiFiHandler(); 
+    ~WiFiHandler();
     void setCredentials(const char* WiFiSSID, const char* WiFiPass);
     void setCredentials(WiFiCredentials credentials);
     static void wpsStop();
-    void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info);
+    void WPSCallback(WiFiEvent_t event, arduino_event_info_t info);
     bool saveWiFiCredentials();
     bool loadWiFiCredentials();
     void connectWPS();
@@ -49,7 +39,7 @@ public:
     State state = DISCONNECTED;
     
 private:
-    eepromcredentials_t eeprom_credentials;
+    WiFiCredentials *wifi_credentials;
     const char* SSID; 
     const char* password;
 };
