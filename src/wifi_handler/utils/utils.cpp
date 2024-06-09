@@ -1,10 +1,9 @@
 #include "wifi_handler/utils/utils.h"
-namespace WiFiUtils
-{
+namespace WiFiUtils{
     //Function that saves WiFi credentials to EEPROM flash memory along with a checksum.
     bool saveEEPROMCredentials(WiFiCredentials &credentials) {
 
-        Serial.println("Saving WiFi Credentials to EEPROM memory...");
+        Serial.println("[EEPROM][INFO] Saving WiFi Credentials to EEPROM memory...");
 
         eepromcredentials_t eeprom_credentials;
         
@@ -23,7 +22,7 @@ namespace WiFiUtils
 
         bool success = EEPROM.commit();
         if (!success) {
-            Serial.println("Failed to save credentials to EEPROM.");
+            Serial.println("[EEPROM][ERROR] Failed to save credentials to EEPROM.");
         }
         return success;
     }
@@ -31,7 +30,7 @@ namespace WiFiUtils
     //Function that loads WiFi credentials from EEPROM flash memory and checks if they're valid.
     bool loadEEPROMCredentials(WiFiCredentials *wifi_credentials) {
 
-        Serial.println("Loading credentials from EEPROM memory..");
+        Serial.println("[EEPROM][INFO] Loading credentials from EEPROM memory..");
 
         try{
             eepromcredentials_t eeprom_credentials;
@@ -50,9 +49,9 @@ namespace WiFiUtils
             }
         } catch(...) {
 
-            Serial.println("Failed to retrieve data from EEPROM memory.");
+            Serial.println("[EEPROM][ERROR] Failed to retrieve data from EEPROM memory.");
 
         }
             return false;
         }   
-    } 
+} 

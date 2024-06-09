@@ -56,37 +56,37 @@ bool WiFiHandler::loadWiFiCredentials() {
 void WiFiHandler::WPSCallback(WiFiEvent_t event, arduino_event_info_t info){
   switch(event){
     case ARDUINO_EVENT_WIFI_STA_START:
-      Serial.println("[WiFi] Station Mode Started");
+      Serial.println("[WiFi][INFO] Station Mode Started");
       break;
     case ARDUINO_EVENT_WIFI_STA_GOT_IP:
-      Serial.println("[WiFi] Connected to WiFi: " + String(WiFi.SSID()));
-      Serial.print("[WiFi] Got IP: ");
+      Serial.println("[WiFi][INFO] Connected to WiFi: " + String(WiFi.SSID()));
+      Serial.print("[WiFi][INFO] Got IP: ");
       Serial.println(WiFi.localIP());
       saveWiFiCredentials();
       state = CONNECTED;
       break;
     case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
-      Serial.println("[WiFi] Disconnected from station, attempting reconnection");
+      Serial.println("[WiFi][INFO] Disconnected from station, attempting reconnection");
       WiFi.reconnect();
       break;
     case ARDUINO_EVENT_WPS_ER_SUCCESS:
-      Serial.println("[WiFi] WPS Successfull, stopping WPS and connecting to: " + String(WiFi.SSID()));
+      Serial.println("[WiFi][INFO] WPS Successfull, stopping WPS and connecting to: " + String(WiFi.SSID()));
       wpsStop();
       delay(10);
       WiFi.begin();
       break;
     case ARDUINO_EVENT_WPS_ER_FAILED:
-      Serial.println("[WiFi] WPS Failed, retrying");
+      Serial.println("[WiFi][INFO] WPS Failed, retrying");
       wpsStop();
       state = WPS_ERR;
       break;
     case ARDUINO_EVENT_WPS_ER_TIMEOUT:
-      Serial.println("[WiFi] WPS Timed out, retrying");
+      Serial.println("[WiFi][INFO] WPS Timed out, retrying");
       wpsStop();
       state = WPS_ERR;
       break;
     case ARDUINO_EVENT_WPS_ER_PIN:
-      Serial.println("[WiFi] WPS_PIN = " + Utils::wpspin2string(info.wps_er_pin.pin_code));
+      Serial.println("[WiFi][INFO] WPS_PIN = " + Utils::wpspin2string(info.wps_er_pin.pin_code));
       break;
     default:
       break;
@@ -102,7 +102,7 @@ void WiFiHandler::connectWPS() {
   WiFi.mode(WIFI_MODE_STA);
 
   state = WPS_CONNECTION;
-  Serial.println("[WiFi] Starting WPS Connection.");
+  Serial.println("[WiFi][INFO] Starting WPS Connection.");
 
   config.wps_type = ESP_WPS_MODE;
   strcpy(config.factory_info.manufacturer, ESP_MANUFACTURER);
@@ -126,7 +126,7 @@ void WiFiHandler::connect(uint16_t timeout_s) {
 
     while (multi.run() != WL_CONNECTED && attempts*time_delay<timeout_s*1000){
         attempts++;
-        Serial.println("[WiFi] Attempting to connect to WiFi.");
+        Serial.println("[WiFi][INFO] Attempting to connect to WiFi...");
         delay(time_delay);
     }
 
@@ -134,7 +134,7 @@ void WiFiHandler::connect(uint16_t timeout_s) {
       Serial.println("[WiFi][ERROR] Failed to connect to the WiFi.");
       state = DISCONNECTED;
     }else {
-      Serial.print("[WiFi] Connected to WiFi: ");
+      Serial.print("[WiFi][INFO] Connected to WiFi: ");
       state = CONNECTED;
       Serial.println(WiFi.SSID());
     }

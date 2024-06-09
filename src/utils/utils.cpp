@@ -1,4 +1,5 @@
 #include "utils/utils.h"
+
 namespace Utils{
     void arrayToString(volatile uint16_t* input, size_t len, char* buffer){
         strcat(buffer, "\"[");
@@ -33,7 +34,7 @@ namespace Utils{
 
             delete[] tempInput;
         }catch(const std::bad_alloc& e){
-            Serial.printf("[ERROR] Memory allocation failed: %s\n",e.what()); 
+            Serial.printf("[UTILS][ERROR] Memory allocation failed: %s\n",e.what()); 
             throw;
         }catch(...){
             delete[] tempInput;

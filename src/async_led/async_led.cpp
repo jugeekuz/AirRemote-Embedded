@@ -1,67 +1,104 @@
 #include "async_led/async_led.h"
 
-TaskHandle_t LED::blinkTaskHandle = NULL;  // Initialize the static task handle
-
-LED::LED(const uint8_t pin): pin(pin) {
+AsyncLED::AsyncLED(const uint8_t pin): pin(pin) {
     pinMode(pin, OUTPUT);
 }
 
-void LED::blink(uint8_t frequency, uint8_t times) {
-
-    BlinkParameters* params = new BlinkParameters{this->pin, frequency, times};
-
-    xTaskCreate(
-        blinkTask,     // Task function
-        "BlinkTask",   // Name of the task (for debugging)
-        1024,          // Stack size
-        params,        // Parameters to pass to the task
-        1,             // Task priority
-        &blinkTaskHandle // Task handle
-    );
+AsyncLED::~AsyncLED() {
+    deleteTask();
 }
 
-void LED::setState(uint8_t val) {
+// Static task handle for running task
+TaskHandle_t AsyncLED::xRunningHandle = NULL;
 
-    SetStateParameters* params = new SetStateParameters{this->pin, val};
-
-    xTaskCreate(
-        setStateTask, // Task function
-        "SetStateTask", // Name of the task (for debugging)
-        1024,           // Stack size
-        params,         // Parameters to pass to the task
-        1,              // Task priority
-        NULL            // Task handle
-    );
+// Delete the running task
+void AsyncLED::deleteTask() {
+    if (xRunningHandle != NULL) {
+        vTaskDelete(xRunningHandle);
+        xRunningHandle = NULL;
+    }
 }
 
-void LED::blinkTask(void* parameter) {
+// Set the state of the LED
+void AsyncLED::setState(uint8_t val) {
+    deleteTask();
+    digitalWrite(this->pin, val);
+}
 
-    BlinkParameters* params = static_cast<BlinkParameters*>(parameter);
-    int delayTime = 1000 / params->frequency;
+// Blink the LED for a specified frequency and number of times
+void AsyncLED::blink(uint8_t frequency, uint8_t times) {
+    deleteTask();
+    
+    this->blink_frequency = frequency;
+    this->blink_times = times;
 
-    for(int i = 0; i < params->times; i++) {
+    if( xTaskCreate(
+            blinkTask,     // Task function
+            "BlinkTask",   // Name of the task (for debugging)
+            1024,          // Stack size
+            this,        // Parameters to pass to the task
+            1,             // Task priority
+            &xRunningHandle // Task handle
+        ) != pdPASS) {
+            Serial.println("[AsyncLED][ERROR] Failed to create the task. Insufficient heap memory.");
+    }
+}
+
+// Blink the LED forever with a specified frequency
+void AsyncLED::blink(uint8_t frequency) {
+    deleteTask();
+    
+    this->blink_frequency = frequency;
+
+    if (xTaskCreate(
+            blinkForeverTask,     // Task function
+            "BlinkTaskForever",   // Name of the task (for debugging)
+            1024,          // Stack size
+            this,        // Parameters to pass to the task
+            1,             // Task priority
+            &xRunningHandle // Task handle
+        ) != pdPASS) {
+            Serial.println("[AsyncLED][ERROR] Failed to create the task. Insufficient heap memory.");
+    }
+}
+
+// Task function for blinking the LED a specified number of times
+void AsyncLED::blinkTask(void* parameter) {
+
+    AsyncLED* params = static_cast<AsyncLED*>(parameter);
+
+    if (params == NULL) {
+        vTaskDelete(NULL);
+        return;
+    }
+    int delayTime = 1000 / params->blink_frequency;
+
+    for(int i = 0; i < params->blink_times; i++) {
         digitalWrite(params->pin, HIGH);
         vTaskDelay(delayTime / portTICK_PERIOD_MS);
         digitalWrite(params->pin, LOW);
         vTaskDelay(delayTime / portTICK_PERIOD_MS);
     }
 
-    delete params;
-    xTaskNotifyGive(blinkTaskHandle);  // Notify that the blink task is complete
+    xRunningHandle = NULL;
     vTaskDelete(NULL);
 }
 
-void LED::setStateTask(void* parameter) {
+// Task function for blinking the LED forever
+void AsyncLED::blinkForeverTask(void* parameter) {
 
-    SetStateParameters* params = static_cast<SetStateParameters*>(parameter);
-    
-    // Wait for the blink task to complete if it is running
-    if (blinkTaskHandle != NULL) {
-        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+    AsyncLED* params = static_cast<AsyncLED*>(parameter);
+
+    if (params == NULL) {
+        vTaskDelete(NULL);
+        return;
     }
+    int delayTime = 1000 / params->blink_frequency;
 
-    digitalWrite(params->pin, params->val);
-
-    delete params;
-    vTaskDelete(NULL);
+    for(;;) {
+        digitalWrite(params->pin, HIGH);
+        vTaskDelay(delayTime / portTICK_PERIOD_MS);
+        digitalWrite(params->pin, LOW);
+        vTaskDelay(delayTime / portTICK_PERIOD_MS);
+    }
 }
