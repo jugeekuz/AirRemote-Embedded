@@ -7,13 +7,12 @@
 #define ESP_MODEL_NAME    "ESPRESSIF IOT"
 #define ESP_DEVICE_NAME   "ESP STATION"
 
-#include <EEPROM.h>
-#include <WiFiMulti.h>
 #include "WiFi.h"
 #include "esp_wps.h"
 #include "./utils/utils.h"
+#include "./utils/eeprom_utils.h"
 
-static esp_wps_config_t config;
+static esp_wps_config_t wps_config;
 
 /**
  * @enum State
@@ -30,7 +29,7 @@ typedef enum{
  * @class WiFiHandler
  * @brief Handles WiFi connection and credentials.
  */
-class WiFiHandler {
+class WiFiHandler : public WiFiClass {
 public:
     /**
      * @brief Default constructor for WiFiHandler.
@@ -51,9 +50,8 @@ public:
 
     /**
      * @brief Sets the WiFi credentials.
-     * @param credentials The WiFiCredentials object containing the SSID and password.
      */
-    void setCredentials(WiFiCredentials credentials);
+    void setCredentials();
 
     /**
      * @brief Stops the WPS connection process.
@@ -90,22 +88,9 @@ public:
      */
     void connect(uint16_t timeout_s);
 
-    /**
-     * @brief Gets the MAC address of the WiFi interface.
-     * @return The MAC address as a string.
-     */
-    String macAddress();
-
-    /**
-     * @brief Gets the current status of the WiFi connection.
-     * @return The status of the WiFi connection.
-     */
-    wl_status_t status();
-
     State state = DISCONNECTED; /**< The current state of the WiFi connection. */
     
 private:
-    WiFiCredentials *wifi_credentials; /**< Pointer to the WiFiCredentials object. */
     const char* SSID; /**< The SSID of the WiFi network. */
     const char* password; /**< The password of the WiFi network. */
 };

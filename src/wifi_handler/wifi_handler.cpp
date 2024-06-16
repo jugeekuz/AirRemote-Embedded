@@ -5,48 +5,30 @@ Can also connect through WPS and the credentials are saved to Flash.
 */
 #include "wifi_handler/wifi_handler.h"
 
-WiFiHandler::WiFiHandler(){
-  try{
-    WiFiCredentials *wifi_credentials = new WiFiCredentials;
-    wifi_credentials->ssid = new char[33];
-    wifi_credentials->password = new char[64];
-    this->wifi_credentials = wifi_credentials;
-  }catch(const std::bad_alloc& e){
-    Serial.println("[WiFi][ERROR] Failed to allocate memory for WiFi credentials.");
-  }
-}
-WiFiHandler::~WiFiHandler(){
-  try{
-    delete[] this->wifi_credentials->ssid;
-    delete[] this->wifi_credentials->password;
-    delete[] this->wifi_credentials;
-  }catch(...){
-    Serial.println("[WiFi][ERROR] Failed to deallocate memory for WiFi credentials.");
-  }
-}
+WiFiHandler::WiFiHandler() : WiFiClass(){}
+WiFiHandler::~WiFiHandler(){}
 
 void WiFiHandler::setCredentials(const char* SSID, const char* password){
   this->SSID = SSID;
   this->password = password;
 }
 
-void WiFiHandler::setCredentials(WiFiCredentials credentials){
-  this->SSID = credentials.ssid;
-  this->password = credentials.password;
+void WiFiHandler::setCredentials(){
+  this->SSID = wifi_credentials.ssid;
+  this->password = wifi_credentials.password;
 }
 
 //Function that saves WiFi credentials to EEPROM flash memory.
 bool WiFiHandler::saveWiFiCredentials() {
-  WiFiCredentials credentials;
-  strncpy(credentials.ssid, WiFi.SSID().c_str(), strlen(WiFi.SSID().c_str()));
-  strncpy(credentials.password, WiFi.psk().c_str(), strlen(WiFi.psk().c_str()));
-  return (WiFiUtils::saveEEPROMCredentials(credentials));
+  strncpy(wifi_credentials.ssid, WiFi.SSID().c_str(), strlen(WiFi.SSID().c_str()));
+  strncpy(wifi_credentials.password, WiFi.psk().c_str(), strlen(WiFi.psk().c_str()));
+  return (EEPROMUtils::updateWiFiCredentials());
 }
 
 //Function that loads WiFi credentials from EEPROM flash memory and checks if they're valid.
 bool WiFiHandler::loadWiFiCredentials() {
-  if (WiFiUtils::loadEEPROMCredentials(this->wifi_credentials)){
-    setCredentials(*wifi_credentials);
+  if (EEPROMUtils::loadWiFiCredentials()){
+    setCredentials();
     return true;
   }
   return false;
@@ -98,19 +80,19 @@ void WiFiHandler::connectWPS() {
   WiFiEventFuncCb cbEvent = [this](WiFiEvent_t event, arduino_event_info_t info){
     WPSCallback(event, info);
   };
-  WiFi.onEvent(cbEvent);
-  WiFi.mode(WIFI_MODE_STA);
+  onEvent(cbEvent);
+  mode(WIFI_MODE_STA);
 
   state = WPS_CONNECTION;
   Serial.println("[WiFi][INFO] Starting WPS Connection.");
 
-  config.wps_type = ESP_WPS_MODE;
-  strcpy(config.factory_info.manufacturer, ESP_MANUFACTURER);
-  strcpy(config.factory_info.model_number, ESP_MODEL_NUMBER);
-  strcpy(config.factory_info.model_name, ESP_MODEL_NAME);
-  strcpy(config.factory_info.device_name, ESP_DEVICE_NAME);
+  wps_config.wps_type = ESP_WPS_MODE;
+  strcpy(wps_config.factory_info.manufacturer, ESP_MANUFACTURER);
+  strcpy(wps_config.factory_info.model_number, ESP_MODEL_NUMBER);
+  strcpy(wps_config.factory_info.model_name, ESP_MODEL_NAME);
+  strcpy(wps_config.factory_info.device_name, ESP_DEVICE_NAME);
 
-  if(esp_wifi_wps_enable(&config)){
+  if(esp_wifi_wps_enable(&wps_config)){
     Serial.println("[WiFi][ERROR] WPS Enable Failed");
   } else if(esp_wifi_wps_start(120000)){
     Serial.println("[WiFi][ERROR] WPS Start Failed");
@@ -121,16 +103,16 @@ void WiFiHandler::connectWPS() {
 void WiFiHandler::connect(uint16_t timeout_s) {
     uint32_t attempts = 0;
     const uint16_t time_delay = 300;
-    WiFiMulti multi;
-    multi.addAP(this->SSID, this->password);
+    
+    WiFi.begin(this->SSID, this->password);
 
-    while (multi.run() != WL_CONNECTED && attempts*time_delay<timeout_s*1000){
+    while (WiFi.status() != WL_CONNECTED && attempts*time_delay < timeout_s*1000){
         attempts++;
         Serial.println("[WiFi][INFO] Attempting to connect to WiFi...");
         delay(time_delay);
     }
 
-    if (attempts*time_delay > timeout_s){
+    if (attempts*time_delay > timeout_s*1000){
       Serial.println("[WiFi][ERROR] Failed to connect to the WiFi.");
       state = DISCONNECTED;
     }else {
@@ -138,14 +120,6 @@ void WiFiHandler::connect(uint16_t timeout_s) {
       state = CONNECTED;
       Serial.println(WiFi.SSID());
     }
-}
-
-String WiFiHandler::macAddress(){
-  return WiFi.macAddress();
-}
-
-wl_status_t WiFiHandler::status(){
-  return WiFi.status();
 }
 
 void WiFiHandler::wpsStop(){

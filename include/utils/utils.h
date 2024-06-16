@@ -18,9 +18,9 @@ namespace Utils {
     void arrayToString(volatile uint16_t* input, size_t len, char* buffer);
 
     /**
-     * @brief Calculates the checksum of an array of uint8_t.
+     * @brief Calculates the checksum of an array of uint16_t.
      * 
-     * @param data The input array of uint8_t.
+     * @param data The input array of uint16_t.
      * @param len The length of the input array.
      * @return The calculated checksum.
      */

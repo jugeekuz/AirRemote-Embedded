@@ -17,7 +17,7 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <WebSocketsClient.h>
-#include "websocket_handler/utils/validators.h"
+#include "websocket_handler/validators/validators.h"
 #include "utils/utils.h"
 #include "ir_remote/ir_remote.h"
 
@@ -28,7 +28,7 @@
  * This class provides methods for establishing a WebSocket connection, sending and receiving messages,
  * and handling different types of WebSocket events, primarily to handle incoming IR remote commands.
  */
-class WebSocketHandler {
+class WebSocketHandler : public WebSocketsClient{
 public:
     /**
      * @brief Constructs a WebSocketHandler object.
@@ -90,42 +90,14 @@ public:
     void startConnection(const char* ws_host, uint16_t ws_port, const char* ws_url, const char* ws_fingerprint, const char* ws_protocol);
 
     /**
-     * @brief Checks if the WebSocket connection is currently established.
-     * 
-     * @return true if the WebSocket connection is established, false otherwise.
-     */
-    bool isConnected();
-
-    /**
-     * @brief Performs the necessary operations in the WebSocketHandler loop.
-     * 
-     * This method should be called periodically to handle WebSocket events and maintain the connection.
-     */
-    void loop();
-
-    /**
-     * @brief Disconnects the WebSocket connection.
-     */
-    void disconnect();
-
-    /**
      * @brief Sends a text message to the WebSocket server.
      * 
      * @param payload The text message to be sent.
      */
-    void sendTXT(char* payload);
+    void sendMSG(char* payload);
 
-    /**
-     * @brief Enables the WebSocket heartbeat functionality.
-     * 
-     * @param pingInterval The interval between ping messages in milliseconds.
-     * @param pongTimeout The timeout for receiving a pong message in milliseconds.
-     * @param disconnectTimeoutCount The number of consecutive pong message timeouts before disconnecting.
-     */
-    void enableHeartbeat(uint32_t pingInterval, uint32_t pongTimeout, uint8_t disconnectTimeoutCount);
 
 private:
-    WebSocketsClient wsClient; /**< The underlying WebSocketsClient object for handling the WebSocket connection. */
     IRremote** irRemote; /**< A pointer to the address of a IRremote object used for handling IR remote commands. */
 };
 

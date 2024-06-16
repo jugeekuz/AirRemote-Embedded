@@ -1,4 +1,4 @@
-#include "websocket_handler/utils/validators.h"
+#include "websocket_handler/validators/validators.h"
 
 namespace MessageValidators{
     void checkMessage(uint8_t * request_payload){
