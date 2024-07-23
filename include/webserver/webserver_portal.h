@@ -7,7 +7,9 @@
 #include <DNSServer.h>
 #include <esp_wifi.h>
 #include "wifi_handler/wifi_handler.h"
-
+#include "./pages/index_html.h"
+#include "webserver/utils/html_utils.h"
+#include "utils/eeprom_utils.h"
 #define MAX_CLIENTS 4	
 #define WIFI_CHANNEL 6	
 
@@ -21,10 +23,10 @@ extern bool webserverSubmitted;
 
 class WebServer {
 public:
-    WebServer();
+    WebServer(WiFiHandler *wiFiHandler);
     ~WebServer();
-    void scanAndUpdateHTML();
     void setup();
     void loop();
+    WiFiHandler *wifiHandler;
 };
 #endif

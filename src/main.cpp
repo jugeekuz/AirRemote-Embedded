@@ -44,9 +44,9 @@ AsyncButton *resetButton = nullptr;
 IRremote *irRemote = nullptr;
 
 
-WiFiHandler WiFiHandler;
-WebServer *webServer;
-WebSocketHandler *webSocket;
+WiFiHandler wifiHandler;
+WebServer *webServer = nullptr;
+WebSocketHandler *webSocket = nullptr;
 String query_parameters = "";
 uint64_t startTime;
 
@@ -55,7 +55,8 @@ bool flag = true;
 // Function that starts the WebServer to set the configuration parameters
 void runWebServer(){  
   try{
-    webServer = new WebServer();
+    if (webServer == NULL) webServer = new WebServer(&wifiHandler);
+
     webServer->setup();
     while(!webserverSubmitted) webServer->loop();
     
@@ -70,19 +71,19 @@ void runWebServer(){
     return;
   }
   delete webServer;
-  WiFiHandler.loadWiFiCredentials();
+  wifiHandler.loadWiFiCredentials();
 }
 
 // Function that starts the WPS connection
 void startWPS(){
   if (connectionLED != NULL) connectionLED->blink(WPS_CONNECTING_FREQUENCY);
-  WiFiHandler.connectWPS();
+  wifiHandler.connectWPS();
   while (WiFi.status() != WL_CONNECTED);
 }
 
 // Function that connects to the WiFi network
 void connectWiFi(){
-  WiFiHandler.connect(WIFI_TIMEOUT);
+  wifiHandler.connect(WIFI_TIMEOUT);
   if (connectionLED != NULL) connectionLED->blink(WIFI_BLINK_FREQUENCY);
   while (WiFi.status() != WL_CONNECTED);
   if (connectionLED != NULL) connectionLED->setState(HIGH);
@@ -102,16 +103,30 @@ void connectWebSocket(){
   EEPROMUtils::loadWebSocketConfig();
   query_parameters = websocket_credentials.ws_url;
   query_parameters += "?deviceType=iot&macAddress=";
-  query_parameters += WiFiHandler.macAddress();
+  query_parameters += wifiHandler.macAddress();
 
   webSocket->startConnection(websocket_credentials.ws_host, websocket_credentials.ws_port, query_parameters.c_str(), "", "wss");
   webSocket->enableHeartbeat(3*1000, 5*1000,1);
 }
 
 
+void disconnectWebSocket() {
+  Serial.println("[RESET][INFO] Disconnecting WebSocket...");
+  if (webSocket == NULL) return;
+
+  webSocket->disableHeartbeat();
+  webSocket->disconnect();
+
+  while (webSocket->isConnected());
+
+  delete webSocket;
+  webSocket = nullptr;
+}
+
 // Function that resets the connection to re-initialize the configuration parameters and re-connect.
 void resetConnection(){
   Serial.println("[RESET][INFO] Resetting connection...");
+  disconnectWebSocket();
   runWebServer();
   connectWiFi();
   connectWebSocket();
@@ -137,8 +152,9 @@ void setup() {
 
   irRemote = new IRremote(IR_INPUT, IR_OUTPUT, &remoteLED);
 
-  if(!WiFiHandler.loadWiFiCredentials()) runWebServer();
+  if(!wifiHandler.loadWiFiCredentials()) runWebServer();
 
+  WiFi.mode(WIFI_STA);
   connectWiFi();
   connectWebSocket();
 
@@ -147,15 +163,15 @@ void setup() {
 
 
 void loop() {
-  if (webSocket != NULL) {
-    webSocket->loop();
-    if(flag && webSocket->isConnected()){
+  if (webSocket != nullptr) {
+    if(webSocket != NULL) webSocket->loop();
+    if(webSocket != NULL && flag && webSocket->isConnected()){
       flag = false;
       if (connectionLED != NULL) connectionLED->setState(HIGH);
     } 
 
     // Let 10 seconds pass for the webSocket to connect to not flood connection requests
-    if((millis() - startTime >= 10000) && !webSocket->isConnected()){
+    if((webSocket != NULL ) && (millis() - startTime >= 10000) && !webSocket->isConnected()){
       webSocket->startConnection(websocket_credentials.ws_host, websocket_credentials.ws_port, query_parameters.c_str(), "", "wss");
       startTime = millis();
     }

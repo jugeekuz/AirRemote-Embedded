@@ -91,8 +91,8 @@ public:
     State state = DISCONNECTED; /**< The current state of the WiFi connection. */
     
 private:
-    const char* SSID; /**< The SSID of the WiFi network. */
-    const char* password; /**< The password of the WiFi network. */
+    char SSID[33]; /**< The SSID of the WiFi network. */
+    char password[65]; /**< The password of the WiFi network. */
 };
 
 #endif

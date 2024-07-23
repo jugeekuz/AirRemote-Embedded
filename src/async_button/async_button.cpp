@@ -9,7 +9,7 @@ void AsyncButton::setButtonListener(void (*callback)()) {
     xTaskCreatePinnedToCore(
         AsyncButton::buttonTask,    // Task function
         "ButtonTask",               // Name of task
-        2048,                       // Stack size of task
+        4096,                       // Stack size of task
         this,                       // Parameter of the task
         1,                          // Priority of the task
         NULL,                       // Task handle

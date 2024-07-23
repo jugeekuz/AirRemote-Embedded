@@ -27,8 +27,8 @@ extern eepromconfig_t eeprom_config;
  * @brief Structure to store WiFi credentials.
  */
 struct wificredentials_t{
-    char * ssid; /**< SSID of the WiFi network. */
-    char * password; /**< Password of the WiFi network. */
+    char ssid[33]; /**< SSID of the WiFi network. */
+    char password[64]; /**< Password of the WiFi network. */
 };
 extern wificredentials_t wifi_credentials;
 

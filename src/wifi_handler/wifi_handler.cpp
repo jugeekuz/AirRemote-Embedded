@@ -8,20 +8,31 @@ Can also connect through WPS and the credentials are saved to Flash.
 WiFiHandler::WiFiHandler() : WiFiClass(){}
 WiFiHandler::~WiFiHandler(){}
 
-void WiFiHandler::setCredentials(const char* SSID, const char* password){
-  this->SSID = SSID;
-  this->password = password;
+void WiFiHandler::setCredentials(const char* ssid, const char* pass){
+  memset(&this->SSID, '\0', sizeof(this->SSID));
+  memset(&this->password, '\0', sizeof(this->password));
+  
+  strncpy(this->SSID, ssid, strlen(ssid));
+  strncpy(this->password, pass, strlen(pass));
 }
 
 void WiFiHandler::setCredentials(){
-  this->SSID = wifi_credentials.ssid;
-  this->password = wifi_credentials.password;
+  memset(&this->SSID, '\0', sizeof(this->SSID));
+  memset(&this->password, '\0', sizeof(this->password));
+  
+  strncpy(this->SSID, wifi_credentials.ssid, strlen(wifi_credentials.ssid));
+  strncpy(this->password, wifi_credentials.password, strlen(wifi_credentials.password));
 }
 
 //Function that saves WiFi credentials to EEPROM flash memory.
 bool WiFiHandler::saveWiFiCredentials() {
+  memset(&wifi_credentials.ssid, '\0', sizeof(wifi_credentials.ssid));
+  memset(&wifi_credentials.password, '\0', sizeof(wifi_credentials.password));
+  
   strncpy(wifi_credentials.ssid, WiFi.SSID().c_str(), strlen(WiFi.SSID().c_str()));
   strncpy(wifi_credentials.password, WiFi.psk().c_str(), strlen(WiFi.psk().c_str()));
+  
+  Serial.printf("Breakpoint2: %s\n", wifi_credentials.ssid);
   return (EEPROMUtils::updateWiFiCredentials());
 }
 
@@ -81,7 +92,7 @@ void WiFiHandler::connectWPS() {
     WPSCallback(event, info);
   };
   onEvent(cbEvent);
-  mode(WIFI_MODE_STA);
+  mode(WIFI_MODE_APSTA);
 
   state = WPS_CONNECTION;
   Serial.println("[WiFi][INFO] Starting WPS Connection.");
