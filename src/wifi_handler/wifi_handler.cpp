@@ -3,9 +3,9 @@ Class used to connect to WiFi.
 Can connect to WiFi through SSID and password.
 Can also connect through WPS and the credentials are saved to Flash.
 */
+#define WIFI_BLINK_FREQUENCY 5
 #include "wifi_handler/wifi_handler.h"
-
-WiFiHandler::WiFiHandler() : WiFiClass(){}
+WiFiHandler::WiFiHandler(AsyncLED *led) : WiFiClass(), led(led){}
 WiFiHandler::~WiFiHandler(){}
 
 void WiFiHandler::setCredentials(const char* ssid, const char* pass){
@@ -26,13 +26,13 @@ void WiFiHandler::setCredentials(){
 
 //Function that saves WiFi credentials to EEPROM flash memory.
 bool WiFiHandler::saveWiFiCredentials() {
+
   memset(&wifi_credentials.ssid, '\0', sizeof(wifi_credentials.ssid));
   memset(&wifi_credentials.password, '\0', sizeof(wifi_credentials.password));
   
   strncpy(wifi_credentials.ssid, WiFi.SSID().c_str(), strlen(WiFi.SSID().c_str()));
   strncpy(wifi_credentials.password, WiFi.psk().c_str(), strlen(WiFi.psk().c_str()));
-  
-  Serial.printf("Breakpoint2: %s\n", wifi_credentials.ssid);
+
   return (EEPROMUtils::updateWiFiCredentials());
 }
 
@@ -55,7 +55,6 @@ void WiFiHandler::WPSCallback(WiFiEvent_t event, arduino_event_info_t info){
       Serial.println("[WiFi][INFO] Connected to WiFi: " + String(WiFi.SSID()));
       Serial.print("[WiFi][INFO] Got IP: ");
       Serial.println(WiFi.localIP());
-      saveWiFiCredentials();
       state = CONNECTED;
       break;
     case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
@@ -114,7 +113,9 @@ void WiFiHandler::connectWPS() {
 void WiFiHandler::connect(uint16_t timeout_s) {
     uint32_t attempts = 0;
     const uint16_t time_delay = 300;
-    
+
+    this->led->blink(WIFI_BLINK_FREQUENCY);
+
     WiFi.begin(this->SSID, this->password);
 
     while (WiFi.status() != WL_CONNECTED && attempts*time_delay < timeout_s*1000){
@@ -126,10 +127,12 @@ void WiFiHandler::connect(uint16_t timeout_s) {
     if (attempts*time_delay > timeout_s*1000){
       Serial.println("[WiFi][ERROR] Failed to connect to the WiFi.");
       state = DISCONNECTED;
-    }else {
+      this->led->setState(LOW);
+    } else {
       Serial.print("[WiFi][INFO] Connected to WiFi: ");
       state = CONNECTED;
       Serial.println(WiFi.SSID());
+      this->led->setState(HIGH);
     }
 }
 

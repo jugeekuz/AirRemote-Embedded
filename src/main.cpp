@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include "wifi_handler/wifi_handler.h"
-#include "webserver/webserver_portal.h"
+#include "webserver/webserver.h"
 #include "ir_remote/ir_remote.h"
 #include "websocket_handler/websocket_handler.h"
 #include "async_led/async_led.h"
@@ -10,171 +10,84 @@
 #include "utils/eeprom_utils.h"
 #include <esp_task_wdt.h>
 
-// #define BUTTON_RIGHT_PIN 21
-// #define BUTTON_LEFT_PIN 35
-// #define LED_YELLOW_PIN 16
-// #define LED_BLUE_PIN 18
-
-// #define IR_INPUT 15
-// #define IR_OUTPUT 4
-#define RESET_BUTTON 9
-#define IR_INPUT 2
-#define IR_OUTPUT 13
 #define LED_YELLOW_PIN 25
 #define LED_BLUE_PIN 26
 
+#define IR_INPUT 2
+#define IR_OUTPUT 13
+#define RESET_BUTTON 9
 
-#define WS_HOST "fofo64r8il.execute-api.eu-central-1.amazonaws.com"
-#define WS_PORT 443
-#define WS_URL "/dev"
-#define API_GATEWAY_TIMEOUT_MINUTES 10
-
-#define WIFI_TIMEOUT 10
-#define WIFI_BLINK_FREQUENCY 5
-#define WEBSOCKET_BLINK_FREQUENCY 10
-#define WIFI_NOT_CONNECTED_FREQUENCY 2
-#define WPS_CONNECTING_FREQUENCY 3
-
-SET_LOOP_TASK_STACK_SIZE( 16*1024 );
-
-AsyncLED *remoteLED = nullptr;
-AsyncLED *connectionLED = nullptr;
-AsyncButton *resetButton = nullptr;
-
+WebServer *webServer = nullptr;
+WiFiHandler *wifiHandler = nullptr;
+WebSocketHandler *webSocketHandler = nullptr;
 IRremote *irRemote = nullptr;
 
+AsyncLED *remoteLED = nullptr;
+AsyncLED *setupLED = nullptr;
 
-WiFiHandler wifiHandler;
-WebServer *webServer = nullptr;
-WebSocketHandler *webSocket = nullptr;
-String query_parameters = "";
+AsyncButton *resetButton = nullptr;
 uint64_t startTime;
-
-bool flag = true;
-
-// Function that starts the WebServer to set the configuration parameters
-void runWebServer(){  
-  try{
-    if (webServer == NULL) webServer = new WebServer(&wifiHandler);
-
-    webServer->setup();
-    while(!webserverSubmitted) webServer->loop();
-    
-  } catch (const std::bad_alloc& e) {
-
-    Serial.printf("[WebServer][ERROR] Memory allocation failed: %s\n",e.what());
-    return;
-
-  }catch (const std::exception& e){
-    Serial.println("[SETUP][ERROR] Unexpected error occured in WebServerPortal setup: " + String(e.what()));
-    delete webServer;
-    return;
-  }
-  delete webServer;
-  wifiHandler.loadWiFiCredentials();
+String query_parameters;
+void resetConfig() {
+  if(EEPROMUtils::resetConfig()) esp_restart();
 }
-
-// Function that starts the WPS connection
-void startWPS(){
-  if (connectionLED != NULL) connectionLED->blink(WPS_CONNECTING_FREQUENCY);
-  wifiHandler.connectWPS();
-  while (WiFi.status() != WL_CONNECTED);
-}
-
-// Function that connects to the WiFi network
-void connectWiFi(){
-  wifiHandler.connect(WIFI_TIMEOUT);
-  if (connectionLED != NULL) connectionLED->blink(WIFI_BLINK_FREQUENCY);
-  while (WiFi.status() != WL_CONNECTED);
-  if (connectionLED != NULL) connectionLED->setState(HIGH);
-}
-
-// Function that connects to the WebSocket server
-void connectWebSocket(){
-  try{
-    if (webSocket == NULL) webSocket = new WebSocketHandler(&irRemote);
-
-  } catch (const std::bad_alloc& e) {
-    Serial.printf("[WSc][ERROR] Memory allocation failed: %s\n",e.what());
-    return;
-  }
-
-  if (connectionLED != NULL) connectionLED->blink(WEBSOCKET_BLINK_FREQUENCY);
-  EEPROMUtils::loadWebSocketConfig();
-  query_parameters = websocket_credentials.ws_url;
-  query_parameters += "?deviceType=iot&macAddress=";
-  query_parameters += wifiHandler.macAddress();
-
-  webSocket->startConnection(websocket_credentials.ws_host, websocket_credentials.ws_port, query_parameters.c_str(), "", "wss");
-  webSocket->enableHeartbeat(3*1000, 5*1000,1);
-}
-
-
-void disconnectWebSocket() {
-  Serial.println("[RESET][INFO] Disconnecting WebSocket...");
-  if (webSocket == NULL) return;
-
-  webSocket->disableHeartbeat();
-  webSocket->disconnect();
-
-  while (webSocket->isConnected());
-
-  delete webSocket;
-  webSocket = nullptr;
-}
-
-// Function that resets the connection to re-initialize the configuration parameters and re-connect.
-void resetConnection(){
-  Serial.println("[RESET][INFO] Resetting connection...");
-  disconnectWebSocket();
-  runWebServer();
-  connectWiFi();
-  connectWebSocket();
-}
+bool bootWebServer = false;
 
 void setup() {
   Serial.setTxBufferSize(1024);
   Serial.begin(115200);
 
-  Serial.println();
-  Serial.println("*****************************");
-  Serial.println("**     AirRemote v1.0      **");
-  Serial.println("**  Developed by Jugeekuz  **");
-  Serial.println("*****************************");
-  Serial.println();
-
-  resetButton = new AsyncButton(RESET_BUTTON);
-  resetButton->setButtonListener(&resetConnection);
-
+  while (!Serial)
+    ;;
 
   remoteLED = new AsyncLED(LED_YELLOW_PIN);
-  connectionLED = new AsyncLED(LED_BLUE_PIN);
-
+  setupLED = new AsyncLED(LED_BLUE_PIN);
+  remoteLED->setState(LOW);
+  setupLED->setState(LOW);
+  
+  wifiHandler = new WiFiHandler(setupLED);
   irRemote = new IRremote(IR_INPUT, IR_OUTPUT, &remoteLED);
+  webSocketHandler = new WebSocketHandler(&irRemote, setupLED);
+  
+  bootWebServer = EEPROMUtils::bootWebserver();
+  if (bootWebServer) {
+    webServer = new WebServer(wifiHandler, webSocketHandler, setupLED);
+    webServer->setup();
+  } else {
+    resetButton = new AsyncButton(RESET_BUTTON);
+    resetButton->setButtonListener(&resetConfig, 1);
 
-  if(!wifiHandler.loadWiFiCredentials()) runWebServer();
+    if(!EEPROMUtils::loadWiFiCredentials()) resetConfig();
 
-  WiFi.mode(WIFI_STA);
-  connectWiFi();
-  connectWebSocket();
+    wifiHandler->setCredentials();
+    wifiHandler->connect(60);
 
-  startTime = millis();
+    while(WiFi.status() != WL_CONNECTED)
+      ;;
+
+    if(!EEPROMUtils::loadWebSocketConfig()) resetConfig();
+
+    query_parameters = websocket_credentials.ws_url;
+    query_parameters += "?deviceType=iot&macAddress=";
+    query_parameters += wifiHandler->macAddress();
+
+    webSocketHandler->startConnection(websocket_credentials.ws_host, websocket_credentials.ws_port, query_parameters.c_str(), "", "wss");
+    webSocketHandler->enableHeartbeat(3*1000, 5*1000,1);
+
+    startTime = millis();
+  }
 }
 
-
 void loop() {
-  if (webSocket != nullptr) {
-    if(webSocket != NULL) webSocket->loop();
-    if(webSocket != NULL && flag && webSocket->isConnected()){
-      flag = false;
-      if (connectionLED != NULL) connectionLED->setState(HIGH);
-    } 
+  if (bootWebServer) {
+    webServer->loop();
+  } else {
+    webSocketHandler->loop();
 
-    // Let 10 seconds pass for the webSocket to connect to not flood connection requests
-    if((webSocket != NULL ) && (millis() - startTime >= 10000) && !webSocket->isConnected()){
-      webSocket->startConnection(websocket_credentials.ws_host, websocket_credentials.ws_port, query_parameters.c_str(), "", "wss");
+    // Let 10 seconds pass for the webSocket to connect to not flood connection requests in case webSocket disconnects
+    if((millis() - startTime >= 10000) && !webSocketHandler->isConnected()){
+      webSocketHandler->startConnection(websocket_credentials.ws_host, websocket_credentials.ws_port, query_parameters.c_str(), "", "wss");
       startTime = millis();
     }
   }
-  
 }

@@ -10,7 +10,7 @@ namespace EEPROMUtils{
     //Function that saves WiFi & WebSocket configuration parameters to EEPROM flash memory.
     bool saveConfig(const char * ssid, const char * password, const char * ws_host, const char * ws_url, uint16_t ws_port) {
 
-        Serial.println("[EEPROM][INFO] Saving WiFi Credentials to EEPROM memory...");
+        Serial.println("[EEPROM][INFO] Saving Credentials to EEPROM memory...");
         
         memset(&eeprom_config.ssid, '\0', sizeof(eeprom_config.ssid));
         memset(&eeprom_config.password, '\0', sizeof(eeprom_config.password));
@@ -22,6 +22,7 @@ namespace EEPROMUtils{
         strncpy(eeprom_config.ws_host, ws_host, strlen(ws_host));
         strncpy(eeprom_config.ws_url, ws_url, strlen(ws_url));
         eeprom_config.ws_port = ws_port;
+        eeprom_config.run_server = false;
         
         
         eeprom_config.checksum = \
@@ -29,12 +30,72 @@ namespace EEPROMUtils{
             Utils::calculateChecksum((uint8_t*)eeprom_config.password, sizeof(eeprom_config.password)) ^
             Utils::calculateChecksum((uint8_t*)eeprom_config.ws_host, sizeof(eeprom_config.ws_host)) ^
             Utils::calculateChecksum((uint8_t*)eeprom_config.ws_url, sizeof(eeprom_config.ws_url)) ^
-            Utils::calculateChecksum((uint8_t*)&eeprom_config.ws_port, sizeof(eeprom_config.ws_port));
+            Utils::calculateChecksum((uint8_t*)&eeprom_config.ws_port, sizeof(eeprom_config.ws_port)) ^
+            Utils::calculateChecksum((uint8_t*)&eeprom_config.run_server, sizeof(eeprom_config.run_server)) ;
 
         EEPROM.begin(sizeof(eepromconfig_t));
         EEPROM.put(0, eeprom_config);
         
         bool success = EEPROM.commit();
+        if (!success) {
+            Serial.println("[EEPROM][ERROR] Failed to save credentials to EEPROM.");
+        }
+        return success;
+    }
+    //Function that updates WiFi credentials in EEPROM flash memory.
+    bool updateWiFiCredentials() {
+        bool success = false;
+        if(loadConfig()){
+            Serial.println("[EEPROM][INFO] Updating Wifi Credentials to EEPROM memory...");
+        
+            strncpy(eeprom_config.ssid, wifi_credentials.ssid, strlen(wifi_credentials.ssid));
+            strncpy(eeprom_config.password, wifi_credentials.password, strlen(wifi_credentials.password));
+            eeprom_config.run_server = false;
+        
+            eeprom_config.checksum = \
+                Utils::calculateChecksum((uint8_t*)eeprom_config.ssid, sizeof(eeprom_config.ssid)) ^ 
+                Utils::calculateChecksum((uint8_t*)eeprom_config.password, sizeof(eeprom_config.password)) ^
+                Utils::calculateChecksum((uint8_t*)eeprom_config.ws_host, sizeof(eeprom_config.ws_host)) ^
+                Utils::calculateChecksum((uint8_t*)eeprom_config.ws_url, sizeof(eeprom_config.ws_url)) ^
+                Utils::calculateChecksum((uint8_t*)&eeprom_config.ws_port, sizeof(eeprom_config.ws_port)) ^
+                Utils::calculateChecksum((uint8_t*)&eeprom_config.run_server, sizeof(eeprom_config.run_server)) ;
+
+            EEPROM.begin(sizeof(eepromconfig_t));
+            EEPROM.put(0, eeprom_config);
+            
+            success = EEPROM.commit();
+        };
+        if (!success) {
+            Serial.println("[EEPROM][ERROR] Failed to save credentials to EEPROM.");
+        }
+        return success;
+    }
+
+    //Function that loads WebSocket credentials from EEPROM flash memory and stores them in the provided WebSocketCredentials structure.
+    bool updateWebSocketConfig() {
+        bool success = false;
+        if(loadConfig()){
+            Serial.println("[EEPROM][INFO] Updating WebSocket Credentials to EEPROM memory...");
+            memset(&eeprom_config.ws_host, '\0', sizeof(eeprom_config.ws_host));
+            memset(&eeprom_config.ws_url, '\0', sizeof(eeprom_config.ws_url));
+
+            strncpy(eeprom_config.ws_host, websocket_credentials.ws_host, strlen(websocket_credentials.ws_host));
+            strncpy(eeprom_config.ws_url, websocket_credentials.ws_url, strlen(websocket_credentials.ws_url));
+            eeprom_config.ws_port = websocket_credentials.ws_port;
+            eeprom_config.run_server = false;
+            eeprom_config.checksum = \
+                Utils::calculateChecksum((uint8_t*)eeprom_config.ssid, sizeof(eeprom_config.ssid)) ^ 
+                Utils::calculateChecksum((uint8_t*)eeprom_config.password, sizeof(eeprom_config.password)) ^
+                Utils::calculateChecksum((uint8_t*)eeprom_config.ws_host, sizeof(eeprom_config.ws_host)) ^
+                Utils::calculateChecksum((uint8_t*)eeprom_config.ws_url, sizeof(eeprom_config.ws_url)) ^
+                Utils::calculateChecksum((uint8_t*)&eeprom_config.ws_port, sizeof(eeprom_config.ws_port)) ^
+                Utils::calculateChecksum((uint8_t*)&eeprom_config.run_server, sizeof(eeprom_config.run_server)) ;
+
+            EEPROM.begin(sizeof(eepromconfig_t));
+            EEPROM.put(0, eeprom_config);
+            
+            success = EEPROM.commit();
+        };
         if (!success) {
             Serial.println("[EEPROM][ERROR] Failed to save credentials to EEPROM.");
         }
@@ -61,7 +122,8 @@ namespace EEPROMUtils{
                 Utils::calculateChecksum((uint8_t*)eeprom_config.password, sizeof(eeprom_config.password)) ^
                 Utils::calculateChecksum((uint8_t*)eeprom_config.ws_host, sizeof(eeprom_config.ws_host)) ^
                 Utils::calculateChecksum((uint8_t*)eeprom_config.ws_url, sizeof(eeprom_config.ws_url)) ^
-                Utils::calculateChecksum((uint8_t*)&eeprom_config.ws_port, sizeof(eeprom_config.ws_port));
+                Utils::calculateChecksum((uint8_t*)&eeprom_config.ws_port, sizeof(eeprom_config.ws_port)) ^
+                Utils::calculateChecksum((uint8_t*)&eeprom_config.run_server, sizeof(eeprom_config.run_server));
 
             return (checksum == eeprom_config.checksum);
         } catch(...) {
@@ -81,37 +143,51 @@ namespace EEPROMUtils{
             return true;
         }
         return false;
-    }
-
-    //Function that updates WiFi credentials in EEPROM flash memory.
-    bool updateWiFiCredentials() {
-        Serial.printf("Ssid3 is : %s", wifi_credentials.ssid);
-        Serial.printf("Password3 is : %s", wifi_credentials.password);
-        if(loadConfig()) {
-            Serial.printf("Ssid4 is : %s", wifi_credentials.ssid);
-            Serial.printf("Password4 is : %s", wifi_credentials.password);
-            return saveConfig(wifi_credentials.ssid, wifi_credentials.password, eeprom_config.ws_host, eeprom_config.ws_url, eeprom_config.ws_port);
-        }
-        return false;
-    }
-
-    //Function that loads WebSocket credentials from EEPROM flash memory and stores them in the provided WebSocketCredentials structure.
-    bool updateWebSocketConfig() {
-        if(loadConfig()) {
-            return saveConfig(eeprom_config.ssid, eeprom_config.password, websocket_credentials.ws_host, websocket_credentials.ws_url, websocket_credentials.ws_port);
-        }
-        return false;
-    }
+    }    
 
     //Function that loads WebSocket credentials from EEPROM flash memory and stores them in the provided WebSocketCredentials structure.
     bool loadWebSocketConfig() {
         if(loadConfig()) {
-            websocket_credentials.ws_host = eeprom_config.ws_host;
-            websocket_credentials.ws_url = eeprom_config.ws_url;
+            memset(&websocket_credentials.ws_host, '\0', sizeof(websocket_credentials.ws_host));
+            memset(&websocket_credentials.ws_url, '\0', sizeof(websocket_credentials.ws_url));
+            
+            strncpy(websocket_credentials.ws_host, eeprom_config.ws_host, strlen(eeprom_config.ws_host));
+            strncpy(websocket_credentials.ws_url, eeprom_config.ws_url, strlen(eeprom_config.ws_url));
             websocket_credentials.ws_port = eeprom_config.ws_port;
             return true;
         }
         return false;
+    }
+
+    bool resetConfig() {
+        Serial.println("[EEPROM][INFO] Resetting EEPROM memory...");
+        
+        loadConfig();
+        eeprom_config.run_server = true;
+        
+        eeprom_config.checksum = \
+            Utils::calculateChecksum((uint8_t*)eeprom_config.ssid, sizeof(eeprom_config.ssid)) ^ 
+            Utils::calculateChecksum((uint8_t*)eeprom_config.password, sizeof(eeprom_config.password)) ^
+            Utils::calculateChecksum((uint8_t*)eeprom_config.ws_host, sizeof(eeprom_config.ws_host)) ^
+            Utils::calculateChecksum((uint8_t*)eeprom_config.ws_url, sizeof(eeprom_config.ws_url)) ^
+            Utils::calculateChecksum((uint8_t*)&eeprom_config.ws_port, sizeof(eeprom_config.ws_port)) ^
+            Utils::calculateChecksum((uint8_t*)&eeprom_config.run_server, sizeof(eeprom_config.run_server)) ;
+
+        EEPROM.begin(sizeof(eepromconfig_t));
+        EEPROM.put(0, eeprom_config);
+        
+        bool success = EEPROM.commit();
+        if (!success) {
+            Serial.println("[EEPROM][ERROR] Failed to save credentials to EEPROM.");
+        }
+        return success;
+    }
+
+    bool bootWebserver() {
+        if(loadConfig()) {
+            return eeprom_config.run_server;
+        }
+        return true;
     }
 } 
 

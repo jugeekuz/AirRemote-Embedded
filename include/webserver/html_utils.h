@@ -10,6 +10,8 @@
 
 extern int wifi_index_start;
 extern int wifi_index_end;
+extern int complete_index_start;
+extern int complete_index_end;
 extern int status_index_start;
 extern int status_index_end;
 
@@ -17,6 +19,7 @@ void replaceHtml(char* html, int i, const char* replacement);
 int findKthOccurrence(char* html, char placeholder, int k);
 void setWifiHtmlIndexes();
 void updateWifiPage();
-void updateWifiClass(const char* status);
+void updateWifiStatus(const char* status);
+void setWifiComplete(const char* status);
 
 #endif

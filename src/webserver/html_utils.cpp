@@ -1,6 +1,8 @@
-#include "webserver/utils/html_utils.h"
+#include "webserver/html_utils.h"
 int wifi_index_start = -1;
 int wifi_index_end = -1;
+int complete_index_start = -1;
+int complete_index_end = -1;
 int status_index_start = -1;
 int status_index_end = -1;
 
@@ -28,27 +30,27 @@ int findKthOccurrence(char* html, char placeholder, int k) {
     return -1;
 }
 
-
+// Function that finds the indexes of placeholders `&` within the HTML page (to use to toggle classes) and replaces them with spaces.
 void setWifiHtmlIndexes(){
-	status_index_start = findKthOccurrence(wifi_html, '&', 1);
-	status_index_end = findKthOccurrence(wifi_html, '&', 2);
 
-	wifi_index_start = findKthOccurrence(wifi_html, '&', 3);
-	wifi_index_end = findKthOccurrence(wifi_html, '&', 4);
+	wifi_index_start = findKthOccurrence(wifi_html, '&', 1);
+	wifi_index_end = findKthOccurrence(wifi_html, '&', 2);
 
-	if (wifi_index_start == -1 || wifi_index_end == -1 || \
-	    status_index_start == -1 || status_index_end == -1) {
+	if (wifi_index_start == -1 || wifi_index_end == -1 ) {
             Serial.println("[WebServer][ERROR] Failed to find HTML indexes.");
         };
     char c[] = {' ', '\0'};
     
     replaceHtml(wifi_html, wifi_index_start, c);
     replaceHtml(wifi_html, wifi_index_start, c);
-    replaceHtml(wifi_html, status_index_start, c);
-    replaceHtml(wifi_html, status_index_end, c);
 }
 
 void updateWifiPage() {
+
+    for (int i = wifi_index_start; i <= wifi_index_end; i++) {
+        wifi_html[i] = ' ';
+    }
+
 	const char* left = "<option value=\"";
 	const char* middle = "\">";
 	const char* right = "</option>";
@@ -64,9 +66,6 @@ void updateWifiPage() {
 	int n = WiFi.scanNetworks();
 	memset(wifiOptions, 0, wifiOptionsLen);
 
-    Serial.printf("%d networks found\n", n);
-    Serial.printf("wifiOptionsLen: %d\n", wifiOptionsLen);
-
     if (n == 0) {
         strcat(wifiOptions, "<option value=\"\">No networks found</option>");
     } else {
@@ -81,10 +80,5 @@ void updateWifiPage() {
     if (wifi_index_start == -1 || wifi_index_end == -1 ) return;
     
 	replaceHtml(wifi_html, wifi_index_start, wifiOptions);
-    replaceHtml(wifi_html, status_index_start, "idle");
 }
 
-void updateWifiClass(const char* status) {
-    if (strlen(status) > 5) return;
-    replaceHtml(wifi_html, status_index_start, status);
-}

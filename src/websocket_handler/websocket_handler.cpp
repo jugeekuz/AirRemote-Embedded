@@ -1,13 +1,12 @@
 /*
 Class that is used as a gateway between AWS and ESP.
 */
+#define WEBSOCKET_BLINK_FREQUENCY 10
 
 #include "websocket_handler/websocket_handler.h"
 
-WebSocketHandler::WebSocketHandler(IRremote** irRemote): irRemote(irRemote), WebSocketsClient() {
-    // First code being read is junk, so read a code to initialize the IR receiver.
+WebSocketHandler::WebSocketHandler(IRremote** irRemote, AsyncLED *led): irRemote(irRemote), WebSocketsClient(), led(led) {
     decode_results dec_results;
-    (*irRemote)->getCode(&dec_results);
 }
 
 void WebSocketHandler::sendMSG(char *payload){
@@ -27,7 +26,9 @@ void WebSocketHandler::sendErrorMessage(const char * requestid, const char * bod
     delete[] error_msg;
 }
 
-void WebSocketHandler::handleExecuteCommand(const char * requestId, const char * commandSize, const char * buttonCode){
+void WebSocketHandler::handleExecuteCommand(const char * requestId, 
+                                            const char * commandSize, 
+                                            const char * buttonCode){
     size_t buffer_size = atoi(commandSize);
 
     uint16_t* raw_buffer = nullptr;
@@ -132,9 +133,9 @@ void WebSocketHandler::handleMessage(uint8_t * request_payload){
     }    
 }
 
-void WebSocketHandler::wsEventCallback(WStype_t type, 
-                             uint8_t * payload, 
-                             size_t length) {
+void WebSocketHandler::wsEventCallback( WStype_t type, 
+                                        uint8_t * payload, 
+                                        size_t length) {
     switch (type){
         case WStype_TEXT:
             Serial.printf("[WSc][INFO] Received Message: %s\n", payload);
@@ -142,6 +143,7 @@ void WebSocketHandler::wsEventCallback(WStype_t type,
             break;
         case WStype_CONNECTED:
             Serial.println("[WSc][INFO] Connected.");
+            this->led->setState(HIGH);
             break;
         case WStype_DISCONNECTED:  
             Serial.println("[WSc][INFO] Disconnected.");
@@ -159,17 +161,42 @@ void WebSocketHandler::wsEventCallback(WStype_t type,
     }
 }
 
-void WebSocketHandler::startConnection(const char *ws_host, 
-                                   uint16_t ws_port, 
-                                   const char *ws_url,
-                                   const char *ws_fingerprint, 
-                                   const char *ws_protocol){
+void WebSocketHandler::startConnection( const char *ws_host, 
+                                        uint16_t ws_port, 
+                                        const char *ws_url,
+                                        const char *ws_fingerprint, 
+                                        const char *ws_protocol){
    
     this->beginSSL(ws_host, ws_port, ws_url, "", ws_protocol);
     
+    memset(&this->ws_host, '\0', sizeof(this->ws_host));
+    memset(&this->ws_url, '\0', sizeof(this->ws_url));
+
+    strncpy(this->ws_host, ws_host, strlen(ws_host));
+    strncpy(this->ws_url, ws_url, strlen(ws_url));
+    this->ws_port = ws_port;
+   
     WebSocketsClient::WebSocketClientEvent cbEvent = [this](WStype_t type, uint8_t * payload, size_t length){
         wsEventCallback(type, payload, length);
     };
 
     this->onEvent(cbEvent);
+    this->led->blink(WEBSOCKET_BLINK_FREQUENCY);
+}
+
+void WebSocketHandler::saveWebSocketCredentials(){
+    
+    memset(&websocket_credentials.ws_host, '\0', sizeof(websocket_credentials.ws_host));
+    memset(&websocket_credentials.ws_url, '\0', sizeof(websocket_credentials.ws_url));
+
+    strncpy(websocket_credentials.ws_host, this->ws_host, strlen(this->ws_host));
+
+    //Copy without the query parameters
+    const char* queryPos = strchr(this->ws_url, '?');
+    size_t copyLength = queryPos ? static_cast<size_t>(queryPos - this->ws_url) : strlen(this->ws_url);
+    strncpy(websocket_credentials.ws_url, this->ws_url, copyLength);
+    websocket_credentials.ws_url[copyLength] ='\0';
+    websocket_credentials.ws_port = this->ws_port;
+
+    EEPROMUtils::updateWebSocketConfig();
 }

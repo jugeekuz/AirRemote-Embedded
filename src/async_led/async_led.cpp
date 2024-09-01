@@ -35,7 +35,7 @@ void AsyncLED::blink(uint8_t frequency, uint8_t times) {
     if( xTaskCreate(
             blinkTask,     // Task function
             "BlinkTask",   // Name of the task (for debugging)
-            1024,          // Stack size
+            2048,          // Stack size
             this,        // Parameters to pass to the task
             1,             // Task priority
             &xRunningHandle // Task handle
@@ -53,7 +53,7 @@ void AsyncLED::blink(uint8_t frequency) {
     if (xTaskCreate(
             blinkForeverTask,     // Task function
             "BlinkTaskForever",   // Name of the task (for debugging)
-            1024,          // Stack size
+            2048,          // Stack size
             this,        // Parameters to pass to the task
             1,             // Task priority
             &xRunningHandle // Task handle

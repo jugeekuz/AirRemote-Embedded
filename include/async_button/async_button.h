@@ -14,6 +14,7 @@ class AsyncButton {
 public:
     AsyncButton(uint8_t pin);
     void setButtonListener(void (*callback)());
+    void setButtonListener(void (*callback)(), UBaseType_t uxPriority);
 
 private:
     uint8_t pin;

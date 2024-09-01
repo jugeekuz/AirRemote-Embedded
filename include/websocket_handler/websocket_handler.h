@@ -20,7 +20,8 @@
 #include "websocket_handler/validators/validators.h"
 #include "utils/utils.h"
 #include "ir_remote/ir_remote.h"
-
+#include "utils/eeprom_utils.h"
+#include "async_led/async_led.h"
 
 /**
  * @brief The WebSocketHandler class handles the communication with a WebSocket server.
@@ -35,7 +36,7 @@ public:
      * 
      * @param irRemote A pointer to the address of a IRremote object used for handling IR remote commands.
      */
-    WebSocketHandler(IRremote** irRemote);
+    WebSocketHandler(IRremote** irRemote, AsyncLED *led);
 
     /**
      * @brief Handles the command to execute an IR remote code received from the WebSocket server and send an ACK response.
@@ -96,9 +97,14 @@ public:
      */
     void sendMSG(char* payload);
 
-
+    void saveWebSocketCredentials();
+    
 private:
+    AsyncLED *led; /**< A pointer to a AsyncLED object used for controlling the LED. */
     IRremote** irRemote; /**< A pointer to the address of a IRremote object used for handling IR remote commands. */
+    char ws_host[128]; 
+    char ws_url[16];
+    uint16_t ws_port;
 };
 
 

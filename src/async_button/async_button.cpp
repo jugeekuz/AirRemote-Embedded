@@ -17,6 +17,20 @@ void AsyncButton::setButtonListener(void (*callback)()) {
     );
 }
 
+void AsyncButton::setButtonListener(void (*callback)(), UBaseType_t uxPriority) {
+    this->callback = callback;
+    xTaskCreatePinnedToCore(
+        AsyncButton::buttonTask,    // Task function
+        "ButtonTask",               // Name of task
+        4096,                       // Stack size of task
+        this,                       // Parameter of the task
+        uxPriority,                          // Priority of the task
+        NULL,                       // Task handle
+        1                           // Core where the task should run
+    );
+}
+
+
 void AsyncButton::buttonTask(void *param) {
     AsyncButton *params = static_cast<AsyncButton*>(param);
 

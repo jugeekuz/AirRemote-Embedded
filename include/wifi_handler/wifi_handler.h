@@ -11,6 +11,7 @@
 #include "esp_wps.h"
 #include "./utils/utils.h"
 #include "./utils/eeprom_utils.h"
+#include "async_led/async_led.h"
 
 static esp_wps_config_t wps_config;
 
@@ -34,7 +35,7 @@ public:
     /**
      * @brief Default constructor for WiFiHandler.
      */
-    WiFiHandler(); 
+    WiFiHandler(AsyncLED *led); 
 
     /**
      * @brief Destructor for WiFiHandler.
@@ -91,6 +92,7 @@ public:
     State state = DISCONNECTED; /**< The current state of the WiFi connection. */
     
 private:
+    AsyncLED *led; /**< The LED used to indicate the WiFi connection status. */
     char SSID[33]; /**< The SSID of the WiFi network. */
     char password[65]; /**< The password of the WiFi network. */
 };

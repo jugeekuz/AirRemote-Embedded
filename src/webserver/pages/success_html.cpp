@@ -64,8 +64,8 @@ char success_html[] = R"=====(
 </head>
 <body>
     <div class="container">
-        <h2>WiFi Connected</h2>
-        <p class="success-message">Your device is now connected to the WiFi network successfully.</p>
+        <h2>Device Connected</h2>
+        <p class="success-message">Your device is now successfully configured.</p>
         <button class="success-button" onclick="window.location.href='/'">Go to Homepage</button>
     </div>
 </body>

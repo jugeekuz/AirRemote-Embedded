@@ -19,6 +19,7 @@ struct eepromconfig_t {
     char ws_url[8]; /**< WebSocket URL. */
     uint16_t ws_port; /**< WebSocket Port. */
     uint8_t checksum; /**< Checksum for data integrity. */
+    bool run_server; /** < Run WebServer Setup if true >*/
 };
 extern eepromconfig_t eeprom_config;
 
@@ -37,8 +38,8 @@ extern wificredentials_t wifi_credentials;
  * @brief Structure to store WebSocket credentials.
  */
 struct websocketcredentials_t{
-    char * ws_host; /**< WebSocket Host. */
-    char * ws_url; /**< WebSocket URL. */
+    char ws_host[128]; /**< WebSocket Host. */
+    char ws_url[16]; /**< WebSocket URL. */
     uint16_t ws_port; /**< WebSocket Port. */
 };
 extern websocketcredentials_t websocket_credentials;
@@ -114,5 +115,9 @@ namespace EEPROMUtils{
      * @return false 
      */
     bool loadWebSocketConfig();
+
+    bool resetConfig();
+
+    bool bootWebserver();
 }
 #endif
