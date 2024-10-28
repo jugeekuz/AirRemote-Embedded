@@ -26,6 +26,19 @@ void WebSocketHandler::sendErrorMessage(const char * requestid, const char * bod
     delete[] error_msg;
 }
 
+void WebSocketHandler::sendErrorMessageAutomation(const char * automationId, const char * body){
+    char *error_msg;
+    try{
+        error_msg = new char[ERROR_RESPONSE_LENGTH];
+    } catch (const std::bad_alloc& e) {
+        Serial.printf("[WSc][ERROR] Memory allocation failed: %s\n",e.what());
+        return;
+    }
+    sprintf(error_msg, "{\"action\":\"error\",\"automationId\":\"%s\",\"body\":\"%s\"}", automationId, body);
+    sendMSG(error_msg);
+    delete[] error_msg;
+}
+
 void WebSocketHandler::handleExecuteCommand(const char * requestId, 
                                             const char * commandSize, 
                                             const char * buttonCode){
@@ -69,6 +82,54 @@ void WebSocketHandler::handleExecuteCommand(const char * requestId,
         delete[] payload;
         Serial.println("[WSc][ERROR] An Unknown error occured.");
         sendErrorMessage(requestId, "[WSc][ERROR] An Unknown error occured.");
+    }
+
+        
+}
+
+void WebSocketHandler::handleAutomationCommand( const char * automationId, 
+                                                const char * commandSize, 
+                                                const char * buttonCode){
+    size_t buffer_size = atoi(commandSize);
+
+    uint16_t* raw_buffer = nullptr;
+    try{
+        raw_buffer = new uint16_t[buffer_size];
+        
+        Utils::stringToArray(buttonCode, buffer_size, raw_buffer);
+        (*irRemote)->sendCode(raw_buffer, buffer_size);
+
+        delete[] raw_buffer;
+
+    } catch (const std::bad_alloc& e) {
+        Serial.printf("[WSc][ERROR] Memory allocation failed: %s\n",e.what());
+
+        sendErrorMessage(automationId, "[WSc][ERROR] Memory allocation failed");
+
+        return;
+    } catch (...) {
+        delete[] raw_buffer;
+
+        Serial.println("[WSc][ERROR] An Unknown error occured.");
+
+        sendErrorMessage(automationId, "[WSc][ERROR] An Unknown error occured.");
+        return;
+    }    
+    
+    char *payload;
+    try{
+        payload = new char[ACK_RESPONSE_LENGTH];
+        sprintf(payload, "{\"action\":\"ack\",\"automationId\":\"%s\"}", automationId);
+        sendMSG(payload);
+        delete[] payload;
+    } catch (const std::bad_alloc& e) {
+        Serial.printf("[WSc][ERROR] Memory allocation failed: %s\n",e.what());
+        sendErrorMessage(automationId, "[WSc][ERROR] Memory allocation failed");
+        return;
+    } catch (...) {
+        delete[] payload;
+        Serial.println("[WSc][ERROR] An Unknown error occured.");
+        sendErrorMessage(automationId, "[WSc][ERROR] An Unknown error occured.");
     }
 
         
@@ -121,10 +182,10 @@ void WebSocketHandler::handleMessage(uint8_t * request_payload){
 
         } else if (CommandValidators::checkReadCommand(request_payload)){
             handleReadCommand(doc["requestId"]);
-    
+        } else if (CommandValidators::checkAutomationCommand(request_payload)) {
+            handleAutomationCommand(doc["automationId"], doc["commandSize"], doc["buttonCode"]);
         } else if (ErrorValidators::checkError(request_payload)){
             Serial.printf("[WSc][ERROR] Received an error message : %s", doc["body"]);
-
         } else {
             sendErrorMessage(doc["requestId"], "[WSc][ERROR] Provided route key not supported.");
         }

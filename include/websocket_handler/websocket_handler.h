@@ -6,7 +6,7 @@
 #define DIGITS_UINT16_T 5
 
 #define SAMPLE_ERROR_RESPONSE "{\"action\":\"error\",\"requestId\":\"xVB_1716157277.932128\",\"body\":\"Lorem ipsum dolor sit amet, consectetur adipiscing elit.Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\"}"
-#define SAMPLE_ACK_RESPONSE "{\"action\":\"ack\",\"requestId\":\"xVB_1716157277.932128\"}"
+#define SAMPLE_ACK_RESPONSE "{\"action\":\"ack\",\"requestId   \":\"xVB_1716157277.932128\"}"
 #define SAMPLE_FIXED_READ_RESPONSE "{\"action\":\"ack\",\"requestId\":\"xVB_1716157277.932128\",\"bufferSize\":\"255\",\"rawBuffer\":\"\"}"
 
 #define ERROR_RESPONSE_LENGTH sizeof(SAMPLE_ERROR_RESPONSE)
@@ -47,6 +47,8 @@ public:
      */
     void handleExecuteCommand(const char* requestId, const char* bufferlen, const char* rawBuffer);
 
+    void handleAutomationCommand(const char* automationId, const char* bufferlen, const char* rawBuffer);
+
     /**
      * @brief Handles the command to read an IR remote code received from the WebSocket server and send an ACK response
      * containing the result.
@@ -62,6 +64,8 @@ public:
      * @param error The error message to be sent.
      */
     void sendErrorMessage(const char* requestId, const char* error);
+
+    void sendErrorMessageAutomation(const char* requestId, const char* error);
 
     /**
      * @brief Callback function for WebSocket events.

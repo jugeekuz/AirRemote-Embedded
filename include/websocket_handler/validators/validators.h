@@ -44,6 +44,8 @@ namespace CommandValidators {
      * @return True if the payload is indeed an `execute` command, false otherwise and error if its' not valid.
      */
     bool checkExecuteCommand(uint8_t *request_payload);
+
+    bool checkAutomationCommand(uint8_t *request_payload);
 }
 
 /**
