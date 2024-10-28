@@ -71,11 +71,45 @@ char index_html[] PROGMEM = R"=====(
             background: linear-gradient(45deg, #9370db, #1e90ff);
             transform: scale(1.05);
         }
+        .logoContainer {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            fill: #ffffff;
+        }
+        .logoTextContainer {
+            height: 100%;
+            margin-left: 5px;
+            font-size: 15px;
+            padding-top: 3px;
+        }
+        .logoText {
+            font-size: 23px;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>AirRemote</h1>
+        <div class="logoContainer">
+            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 164 171">
+                <defs>
+                <style>
+                    .cls-1 {
+                    fill-rule: evenodd;
+                    }
+                </style>
+                </defs>
+                <path class="cls-1" d="M92,0h71L82,85H9L92,0h0Z"/>
+                <path id="Rectangle_1_copy" data-name="Rectangle 1 copy" class="cls-1" d="M83,85.5h71l-81,85H0l83-85h0Z"/>
+            </svg>
+            <div class="logoTextContainer">
+                <span class="logoText">AirRemote</span>
+            </div>
+        </div>
+
         <form action="/redirect-setup" method="POST">
             <div class="options">
                 <input type="radio" id="wifi-setup" name="setup-option" value="wifi-setup" checked>
