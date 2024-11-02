@@ -17,6 +17,7 @@ struct eepromconfig_t {
     char password[64]; /**< Password of the WiFi network. */
     char ws_host[64]; /**< WebSocket Host. */
     char ws_url[8]; /**< WebSocket URL. */
+    char auth_token[45]; /**< Authentication Token. */
     uint16_t ws_port; /**< WebSocket Port. */
     uint8_t checksum; /**< Checksum for data integrity. */
     bool run_server; /** < Run WebServer Setup if true >*/
@@ -40,6 +41,7 @@ extern wificredentials_t wifi_credentials;
 struct websocketcredentials_t{
     char ws_host[128]; /**< WebSocket Host. */
     char ws_url[16]; /**< WebSocket URL. */
+    char auth_token[45]; /**< Authentication Token. */
     uint16_t ws_port; /**< WebSocket Port. */
 };
 extern websocketcredentials_t websocket_credentials;
@@ -62,7 +64,7 @@ namespace EEPROMUtils{
      * 
      * @return True if the credentials were successfully saved, false otherwise.
      */
-    bool saveConfig(const char * ssid, const char * password, const char * ws_host, const char * ws_url, uint16_t ws_port);
+    bool saveConfig(const char * ssid, const char * password, const char * ws_host, const char * ws_url, uint16_t ws_port, const char * auth_token);
 
     /**
      * @brief Loads WiFi credentials from EEPROM.

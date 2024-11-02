@@ -8,7 +8,7 @@ struct websocketcredentials_t websocket_credentials;
 
 namespace EEPROMUtils{
     //Function that saves WiFi & WebSocket configuration parameters to EEPROM flash memory.
-    bool saveConfig(const char * ssid, const char * password, const char * ws_host, const char * ws_url, uint16_t ws_port) {
+    bool saveConfig(const char * ssid, const char * password, const char * ws_host, const char * ws_url, uint16_t ws_port, const char * auth_token) {
 
         Serial.println("[EEPROM][INFO] Saving Credentials to EEPROM memory...");
         
@@ -16,11 +16,13 @@ namespace EEPROMUtils{
         memset(&eeprom_config.password, '\0', sizeof(eeprom_config.password));
         memset(&eeprom_config.ws_host, '\0', sizeof(eeprom_config.ws_host));
         memset(&eeprom_config.ws_url, '\0', sizeof(eeprom_config.ws_url));
-        
+        memset(&eeprom_config.auth_token, '\0', sizeof(eeprom_config.auth_token));
+
         strncpy(eeprom_config.ssid, ssid, strlen(ssid));
         strncpy(eeprom_config.password, password, strlen(password));
         strncpy(eeprom_config.ws_host, ws_host, strlen(ws_host));
         strncpy(eeprom_config.ws_url, ws_url, strlen(ws_url));
+        strncpy(eeprom_config.auth_token, auth_token, strlen(auth_token));
         eeprom_config.ws_port = ws_port;
         eeprom_config.run_server = false;
         
@@ -30,6 +32,7 @@ namespace EEPROMUtils{
             Utils::calculateChecksum((uint8_t*)eeprom_config.password, sizeof(eeprom_config.password)) ^
             Utils::calculateChecksum((uint8_t*)eeprom_config.ws_host, sizeof(eeprom_config.ws_host)) ^
             Utils::calculateChecksum((uint8_t*)eeprom_config.ws_url, sizeof(eeprom_config.ws_url)) ^
+            Utils::calculateChecksum((uint8_t*)eeprom_config.auth_token, sizeof(eeprom_config.auth_token)) ^
             Utils::calculateChecksum((uint8_t*)&eeprom_config.ws_port, sizeof(eeprom_config.ws_port)) ^
             Utils::calculateChecksum((uint8_t*)&eeprom_config.run_server, sizeof(eeprom_config.run_server)) ;
 
@@ -57,6 +60,7 @@ namespace EEPROMUtils{
                 Utils::calculateChecksum((uint8_t*)eeprom_config.password, sizeof(eeprom_config.password)) ^
                 Utils::calculateChecksum((uint8_t*)eeprom_config.ws_host, sizeof(eeprom_config.ws_host)) ^
                 Utils::calculateChecksum((uint8_t*)eeprom_config.ws_url, sizeof(eeprom_config.ws_url)) ^
+                Utils::calculateChecksum((uint8_t*)eeprom_config.auth_token, sizeof(eeprom_config.auth_token)) ^
                 Utils::calculateChecksum((uint8_t*)&eeprom_config.ws_port, sizeof(eeprom_config.ws_port)) ^
                 Utils::calculateChecksum((uint8_t*)&eeprom_config.run_server, sizeof(eeprom_config.run_server)) ;
 
@@ -78,9 +82,11 @@ namespace EEPROMUtils{
             Serial.println("[EEPROM][INFO] Updating WebSocket Credentials to EEPROM memory...");
             memset(&eeprom_config.ws_host, '\0', sizeof(eeprom_config.ws_host));
             memset(&eeprom_config.ws_url, '\0', sizeof(eeprom_config.ws_url));
+            memset(&eeprom_config.auth_token, '\0', sizeof(eeprom_config.auth_token));
 
             strncpy(eeprom_config.ws_host, websocket_credentials.ws_host, strlen(websocket_credentials.ws_host));
             strncpy(eeprom_config.ws_url, websocket_credentials.ws_url, strlen(websocket_credentials.ws_url));
+            strncpy(eeprom_config.auth_token, websocket_credentials.auth_token, strlen(websocket_credentials.auth_token));
             eeprom_config.ws_port = websocket_credentials.ws_port;
             eeprom_config.run_server = false;
             eeprom_config.checksum = \
@@ -88,9 +94,10 @@ namespace EEPROMUtils{
                 Utils::calculateChecksum((uint8_t*)eeprom_config.password, sizeof(eeprom_config.password)) ^
                 Utils::calculateChecksum((uint8_t*)eeprom_config.ws_host, sizeof(eeprom_config.ws_host)) ^
                 Utils::calculateChecksum((uint8_t*)eeprom_config.ws_url, sizeof(eeprom_config.ws_url)) ^
+                Utils::calculateChecksum((uint8_t*)eeprom_config.auth_token, sizeof(eeprom_config.auth_token)) ^
                 Utils::calculateChecksum((uint8_t*)&eeprom_config.ws_port, sizeof(eeprom_config.ws_port)) ^
                 Utils::calculateChecksum((uint8_t*)&eeprom_config.run_server, sizeof(eeprom_config.run_server)) ;
-
+            
             EEPROM.begin(sizeof(eepromconfig_t));
             EEPROM.put(0, eeprom_config);
             
@@ -111,6 +118,7 @@ namespace EEPROMUtils{
             memset(&eeprom_config.password, '\0', sizeof(eeprom_config.password));
             memset(&eeprom_config.ws_host, '\0', sizeof(eeprom_config.ws_host));
             memset(&eeprom_config.ws_url, '\0', sizeof(eeprom_config.ws_url));
+            memset(&eeprom_config.auth_token, '\0', sizeof(eeprom_config.auth_token));
 
             EEPROM.begin(sizeof(eepromconfig_t));
             EEPROM.get(0, eeprom_config);
@@ -122,6 +130,7 @@ namespace EEPROMUtils{
                 Utils::calculateChecksum((uint8_t*)eeprom_config.password, sizeof(eeprom_config.password)) ^
                 Utils::calculateChecksum((uint8_t*)eeprom_config.ws_host, sizeof(eeprom_config.ws_host)) ^
                 Utils::calculateChecksum((uint8_t*)eeprom_config.ws_url, sizeof(eeprom_config.ws_url)) ^
+                Utils::calculateChecksum((uint8_t*)eeprom_config.auth_token, sizeof(eeprom_config.auth_token)) ^
                 Utils::calculateChecksum((uint8_t*)&eeprom_config.ws_port, sizeof(eeprom_config.ws_port)) ^
                 Utils::calculateChecksum((uint8_t*)&eeprom_config.run_server, sizeof(eeprom_config.run_server));
 
@@ -150,9 +159,11 @@ namespace EEPROMUtils{
         if(loadConfig()) {
             memset(&websocket_credentials.ws_host, '\0', sizeof(websocket_credentials.ws_host));
             memset(&websocket_credentials.ws_url, '\0', sizeof(websocket_credentials.ws_url));
+            memset(&websocket_credentials.auth_token, '\0', sizeof(websocket_credentials.auth_token));
             
             strncpy(websocket_credentials.ws_host, eeprom_config.ws_host, strlen(eeprom_config.ws_host));
             strncpy(websocket_credentials.ws_url, eeprom_config.ws_url, strlen(eeprom_config.ws_url));
+            strncpy(websocket_credentials.auth_token, eeprom_config.auth_token, strlen(eeprom_config.auth_token));
             websocket_credentials.ws_port = eeprom_config.ws_port;
             return true;
         }
@@ -170,8 +181,9 @@ namespace EEPROMUtils{
             Utils::calculateChecksum((uint8_t*)eeprom_config.password, sizeof(eeprom_config.password)) ^
             Utils::calculateChecksum((uint8_t*)eeprom_config.ws_host, sizeof(eeprom_config.ws_host)) ^
             Utils::calculateChecksum((uint8_t*)eeprom_config.ws_url, sizeof(eeprom_config.ws_url)) ^
+            Utils::calculateChecksum((uint8_t*)eeprom_config.auth_token, sizeof(eeprom_config.auth_token)) ^
             Utils::calculateChecksum((uint8_t*)&eeprom_config.ws_port, sizeof(eeprom_config.ws_port)) ^
-            Utils::calculateChecksum((uint8_t*)&eeprom_config.run_server, sizeof(eeprom_config.run_server)) ;
+            Utils::calculateChecksum((uint8_t*)&eeprom_config.run_server, sizeof(eeprom_config.run_server));
 
         EEPROM.begin(sizeof(eepromconfig_t));
         EEPROM.put(0, eeprom_config);

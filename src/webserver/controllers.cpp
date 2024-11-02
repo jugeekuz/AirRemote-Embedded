@@ -39,17 +39,20 @@ void wpsConnectTask(void *parameter) {
 }
 
 void webSocketConnectTask(void *parameter) {
-    auto *params = static_cast<std::tuple<WebSocketHandler*, String, String, uint16_t, String>*>(parameter);
+    auto *params = static_cast<std::tuple<WebSocketHandler*, String, String, uint16_t, String, String>*>(parameter);
     WebSocketHandler* webSocket = std::get<0>(*params);
     String ws_host = std::get<1>(*params);
     String ws_url = std::get<2>(*params);
 	uint16_t ws_port = std::get<3>(*params);
-    String macAddress = std::get<4>(*params);
+	String auth_token = std::get<4>(*params);
+    String macAddress = std::get<5>(*params);
 
 	String query_parameters = ws_url;
 	query_parameters += "?deviceType=iot&macAddress=";
 	query_parameters += macAddress;
-	webSocket->startConnection(ws_host.c_str(), ws_port, query_parameters.c_str(), "", "wss");
+	query_parameters += "&token=";
+	query_parameters += auth_token;
+	webSocket->startConnection(ws_host.c_str(), ws_port, query_parameters.c_str(), "", "wss", auth_token.c_str());
 	webSocket->enableHeartbeat(3*1000, 5*1000,1);
 
 	unsigned long start_time = millis();
@@ -165,18 +168,20 @@ ArRequestHandlerFunction WebServer::checkWebSocketStatus() {
 ArRequestHandlerFunction WebServer::webSocketConnect() {
 
 	return [this](AsyncWebServerRequest *request) {
-			if (!(request->hasParam("WS_HOST", true) && request->hasParam("WS_PORT", true) && request->hasParam("WS_URL", true))) {
+			if (!(request->hasParam("WS_HOST", true) && request->hasParam("WS_PORT", true) 
+				&& request->hasParam("WS_URL", true) && request->hasParam("AUTH_TOKEN", true))) {
 				//Add validation
 				request->send(400, "text/plain", "Missing parameters");
 				
 			} else {
 				Serial.println("[WebServer][INFO] Starting connection...");
 				
-				auto *params = new std::tuple<WebSocketHandler*, String, String, uint16_t, String>(
+				auto *params = new std::tuple<WebSocketHandler*, String, String, uint16_t, String, String>(
 					webSocket, 
 					request->getParam("WS_HOST", true)->value(), 
 					request->getParam("WS_URL", true)->value(), 
-					request->getParam("WS_PORT", true)->value().toInt(), 
+					request->getParam("WS_PORT", true)->value().toInt(),
+					request->getParam("AUTH_TOKEN", true)->value(), 
 					wifiHandler->macAddress()
 				);
 

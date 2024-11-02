@@ -197,8 +197,8 @@ const char api_html[] = R"=====(
                 <input type="number" id="WS_PORT" name="WS_PORT" value="443">
             </div>
             <div class="form-group-3">
-                <label for="auth-key">Authentication Key</label>
-                <input type="password" id="auth-key" name="auth-key" placeholder="Enter your key">
+                <label for="auth-key">Authentication token</label>
+                <input type="password" id="AUTH_TOKEN" name="AUTH_TOKEN" placeholder="Enter your key">
             </div>
             <div id="loader-container" class="idle">
                 <span class="loader-wifi"></span>

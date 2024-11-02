@@ -91,8 +91,10 @@ public:
      * @param ws_url The URL of the WebSocket server.
      * @param ws_fingerprint The fingerprint of the WebSocket server's SSL certificate.
      * @param ws_protocol The protocol to be used for the WebSocket connection.
+     * @param auth_token The authentication token that allows this device to connect through websocket.
+     * 
      */
-    void startConnection(const char* ws_host, uint16_t ws_port, const char* ws_url, const char* ws_fingerprint, const char* ws_protocol);
+    void startConnection(const char* ws_host, uint16_t ws_port, const char* ws_url, const char* ws_fingerprint, const char* ws_protocol, const char* auth_token);
 
     /**
      * @brief Sends a text message to the WebSocket server.
@@ -107,7 +109,8 @@ private:
     AsyncLED *led; /**< A pointer to a AsyncLED object used for controlling the LED. */
     IRremote** irRemote; /**< A pointer to the address of a IRremote object used for handling IR remote commands. */
     char ws_host[128]; 
-    char ws_url[16];
+    char ws_url[128];
+    char auth_token[45];
     uint16_t ws_port;
 };
 

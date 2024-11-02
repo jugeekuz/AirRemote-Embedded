@@ -225,16 +225,19 @@ void WebSocketHandler::wsEventCallback( WStype_t type,
 void WebSocketHandler::startConnection( const char *ws_host, 
                                         uint16_t ws_port, 
                                         const char *ws_url,
-                                        const char *ws_fingerprint, 
-                                        const char *ws_protocol){
+                                        const char *ws_fingerprint,
+                                        const char *ws_protocol,
+                                        const char* auth_token){
    
     this->beginSSL(ws_host, ws_port, ws_url, "", ws_protocol);
     
     memset(&this->ws_host, '\0', sizeof(this->ws_host));
     memset(&this->ws_url, '\0', sizeof(this->ws_url));
+    memset(&this->auth_token, '\0', sizeof(this->auth_token));
 
     strncpy(this->ws_host, ws_host, strlen(ws_host));
     strncpy(this->ws_url, ws_url, strlen(ws_url));
+    strncpy(this->auth_token, auth_token, strlen(auth_token));
     this->ws_port = ws_port;
    
     WebSocketsClient::WebSocketClientEvent cbEvent = [this](WStype_t type, uint8_t * payload, size_t length){
@@ -246,18 +249,20 @@ void WebSocketHandler::startConnection( const char *ws_host,
 }
 
 void WebSocketHandler::saveWebSocketCredentials(){
-    
     memset(&websocket_credentials.ws_host, '\0', sizeof(websocket_credentials.ws_host));
     memset(&websocket_credentials.ws_url, '\0', sizeof(websocket_credentials.ws_url));
+    memset(&websocket_credentials.auth_token, '\0', sizeof(websocket_credentials.auth_token));
 
     strncpy(websocket_credentials.ws_host, this->ws_host, strlen(this->ws_host));
+    strncpy(websocket_credentials.auth_token, this->auth_token, strlen(this->auth_token));
+    websocket_credentials.auth_token[44] ='\0';
+    websocket_credentials.ws_port = this->ws_port;
 
     //Copy without the query parameters
     const char* queryPos = strchr(this->ws_url, '?');
     size_t copyLength = queryPos ? static_cast<size_t>(queryPos - this->ws_url) : strlen(this->ws_url);
     strncpy(websocket_credentials.ws_url, this->ws_url, copyLength);
     websocket_credentials.ws_url[copyLength] ='\0';
-    websocket_credentials.ws_port = this->ws_port;
 
     EEPROMUtils::updateWebSocketConfig();
 }

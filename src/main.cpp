@@ -70,8 +70,10 @@ void setup() {
     query_parameters = websocket_credentials.ws_url;
     query_parameters += "?deviceType=iot&macAddress=";
     query_parameters += wifiHandler->macAddress();
+    query_parameters += "&token=";
+	  query_parameters += websocket_credentials.auth_token;
 
-    webSocketHandler->startConnection(websocket_credentials.ws_host, websocket_credentials.ws_port, query_parameters.c_str(), "", "wss");
+    webSocketHandler->startConnection(websocket_credentials.ws_host, websocket_credentials.ws_port, query_parameters.c_str(), "", "wss", websocket_credentials.auth_token);
     webSocketHandler->enableHeartbeat(3*1000, 5*1000,1);
 
     startTime = millis();
@@ -86,7 +88,7 @@ void loop() {
 
     // Let 10 seconds pass for the webSocket to connect to not flood connection requests in case webSocket disconnects
     if((millis() - startTime >= 10000) && !webSocketHandler->isConnected()){
-      webSocketHandler->startConnection(websocket_credentials.ws_host, websocket_credentials.ws_port, query_parameters.c_str(), "", "wss");
+      webSocketHandler->startConnection(websocket_credentials.ws_host, websocket_credentials.ws_port, query_parameters.c_str(), "", "wss", websocket_credentials.auth_token);
       startTime = millis();
     }
   }
