@@ -27,7 +27,11 @@ bool IRremote::getCode(decode_results *results, uint16_t timeout_s){
     while (millis() - startTime < timeout_s*1000){
         if (decode(results)) {
             resume();
+            if (results->overflow || results->repeat) {
+                continue;
+            }
             Serial.println("[IRremote][INFO] Received code.");
+            Serial.print(resultToHumanReadableBasic(results));
 
             (*feedbackLED)->blink(RECEIVED_CODE_FREQUENCY, RECEIVED_CODE_TIMES);
  
