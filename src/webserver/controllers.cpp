@@ -191,9 +191,10 @@ ArRequestHandlerFunction WebServer::webSocketConnect() {
 						4096, 
 						params, 
 						1, // Bigger priority than main loop
-						NULL) != pdPASS) {
-							delete params;
-							request->send(500, "text/plain", "Failed to create task");
+						NULL
+					) != pdPASS) {
+					delete params;
+					request->send(500, "text/plain", "Failed to create task");
 				} else {
 					request->send(200, "text/plain", "Websocket started connection");
 				}

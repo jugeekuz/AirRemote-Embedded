@@ -47,7 +47,6 @@ void WebServer::setup() {
 	WiFi.softAPConfig(localIP, gatewayIP, subnetMask);
 	WiFi.softAP(WIFI_PORTAL_NAME, WIFI_PORTAL_PASSWORD, WIFI_CHANNEL, 0, MAX_CLIENTS);
 
-    EEPROMUtils::saveConfig("", "", "", "", 0, "");
 	esp_wifi_stop();
 	esp_wifi_deinit();
 	wifi_init_config_t my_config = WIFI_INIT_CONFIG_DEFAULT();
