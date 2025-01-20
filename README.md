@@ -17,11 +17,11 @@ Turn your old remote-controlled devices into smart devices! With AirRemote, you 
 AirRemote is a solution designed to modernize legacy remote-controlled devices by making them smart and remotely accessible. AirRemote operates as a universal remote emulator. It works by capturing the infrared (IR) signals from any remote control—regardless of how rare or obscure—and storing them for later use. The device includes an IR receiver and 8 powerful IR transmitters, enabling it to decode, save and replay the captured IR signals across a room.
 
 ## 🔧 Features 
-    - Record the IR signals by simply pressing the buttons of their existing remote control onto the AirRemote device.
-    - Replay the stored signals on command via a web interface.
-    - Create automations to perform a set of operations (such as open lighting, A/C etc.) at specific times.
-    - Give the device to a friend, with the capability to initialize the device and provide credentials through a Captive Portal interface.
-    - Manage, Delete, Reorder your favourite devices through the web interface.
+- Record the IR signals by simply pressing the buttons of their existing remote control onto the AirRemote device.
+- Replay the stored signals on command via a web interface.
+- Create automations to perform a set of operations (such as open lighting, A/C etc.) at specific times.
+- Give the device to a friend, with the capability to initialize the device and provide credentials through a Captive Portal interface.
+- Manage, Delete, Reorder your favourite devices through the web interface.
 
 With these capabilities, AirRemote turns virtually any device with an IR remote into a smart, remotely controllable appliance.
 
@@ -50,9 +50,10 @@ Check out the AirRemote in action:
 ### 🔨 Creating AirRemote Device
 Below you can find a rough sketch of a prototype to get AirRemote working. 
 ![Air Remote PCB](src/assets/imgs/logo-white.png#gh-dark-mode-only)
+
 Under `assets/` you can also find the Gerber File and a parts list to create your own prototype.
 
-### 🛠️ Flasing AirRemote Firmware
+### 🛠️ Flashing AirRemote Firmware
 To build and upload AirRemote, you will need:
  - [Visual Studio Code](https://code.visualstudio.com/download)
  - [PlatformIO IDE VSCode extension](https://platformio.org/)
@@ -75,9 +76,9 @@ To configure credentials to AirRemote:
  5. A captive portal, as shown below, should open (if not, go to a browser and hit `4.3.2.1` or `captive.apple.com` on iOS devices).
  6. Click on Complete Setup, if setting up for the first time.
  7. Follow the instructions to connect to WiFi and then provide the credentials saved in Step 2.
- 8. Your device is ready to use!
-
+Your device is ready to use!
 If there is an error during configuration, restart the device and follow the same process again.
+
 ---
 
 ## 📜 License
