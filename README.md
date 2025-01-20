@@ -1,5 +1,8 @@
-![AirRemote Logo](src/assets/imgs/logo-black.png#gh-light-mode-only)
-![AirRemote Logo](src/assets/imgs/logo-white.png#gh-dark-mode-only)
+<div style="text-align: center;">
+  <img src="assets/imgs/logo-black.png#gh-light-mode-only" alt="AirRemote Logo">
+  <img src="assets/imgs/logo-white.png#gh-dark-mode-only" alt="AirRemote Logo">
+</div>
+
 
 ---
 
@@ -48,16 +51,21 @@ Check out the AirRemote in action:
 ## ⚙️ Installation and Setup
 
 ### 🔨 Creating AirRemote Device
-Below you can find a rough sketch of a prototype to get AirRemote working. 
-![Air Remote PCB](src/assets/imgs/logo-white.png#gh-dark-mode-only)
 
-Under `assets/` you can also find the Gerber File and a parts list to create your own prototype.
+To create the AirRemote board, you can either:
+- Create the PCB, through the Gerber file provided and the parts found under `assets/board/`.
+- Create your own design, through the EasyEDA json file provided under `assets/board/`.
+<div style="text-align:left; margin-left:20px;">
+    <img src="./assets/pcb-sketch.png" alt="Alt Text" width="450">
+</div>
+<br/>
+You are going to find everything you need to get started under `assets/`. 
 
 ### 🛠️ Flashing AirRemote Firmware
 To build and upload AirRemote, you will need:
  - [Visual Studio Code](https://code.visualstudio.com/download)
  - [PlatformIO IDE VSCode extension](https://platformio.org/)
- - [AirRemote device built](#creating-air-remote)
+ <!-- - [AirRemote device built](#creating-air-remote) -->
 
 To flash the AirRemote firmware onto the device:
  1. Clone this repository: 
@@ -68,13 +76,17 @@ To flash the AirRemote firmware onto the device:
  3. Click the `PlatformIO: Upload` button to flash the firmware onto the device.
 
 ### 🔑 Configure AirRemote Credentials
+<div style="text-align:left; margin-left:60px;">
+    <img src="./assets/air-remote-wifi-setup.gif" alt="Alt Text" width="320">
+</div>
+
 To configure credentials to AirRemote:
- 1. Go to your AirRemote web interface -> Devices -> Add Device -> Name the device and click on `Next`.
+ 1. Go to your AirRemote web interface -> **Devices** -> **Add Device** -> Name the device and click on `Next`.
  2. Save the credentials shown in a text file (as you'll need to input them to the device) and click on `Finish`.
  3. Connect your AirRemote device to power and click on the Reset button.
  4. When the light starts blinking slowly, open a mobile device and connect to the `AirRemote-Portal` WiFi.
  5. A captive portal, as shown below, should open (if not, go to a browser and hit `4.3.2.1` or `captive.apple.com` on iOS devices).
- 6. Click on Complete Setup, if setting up for the first time.
+ 6. Click on **Complete Setup**, if setting up for the first time.
  7. Follow the instructions to connect to WiFi and then provide the credentials saved in Step 2.
 Your device is ready to use!
 If there is an error during configuration, restart the device and follow the same process again.
@@ -89,9 +101,4 @@ Licensed under the MIT License.
 
 ## 🤝 Contributing
 Feel free to fork the repository and contribute! Pull requests and feedback are welcome.
-
----
-
-## 🛠️ Support
-For issues or questions, open an issue on GitHub.
 

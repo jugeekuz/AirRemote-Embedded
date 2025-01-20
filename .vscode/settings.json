@@ -5,7 +5,8 @@
     "*.tcc": "cpp",
     "random": "cpp",
     "sstream": "cpp",
-    "string": "cpp"
+    "string": "cpp",
+    "tuple": "cpp"
   },
   "cmake.configureOnOpen": false,
   "C_Cpp_Runner.msvcBatchPath": "",

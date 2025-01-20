@@ -1,0 +1,11 @@
+Description,Manufacturer No.,Qty,Link
+ESP32 Microcontroller,DFR0478,1,https://eu.mouser.com/ProductDetail/DFRobot/DFR0478?qs=EU6FO9ffTwc%252BR65h2NUGQw%3D%3D&srsltid=AfmBOoqt2KD89Mqo3Gey12MHBLnGdqFRKjOWLdqlqYQ4VqUbfLzUDrM1
+IR Transmitter,SFH 4546-AWBW,8,https://eu.mouser.com/datasheet/2/588/prd_pim_datasheet_2220242_EN_pdf-3419094.pdf
+IR Transmitter Resistor 11.3R,CRCW251211R0FKEG,8,https://www.vishay.com/docs/20024/dcrcwife3.pdf
+Power Driving Transistor,PBSS4580PA 115,1,https://eu.mouser.com/datasheet/2/115/DIOD_S_A0001705547_1-2541974.pdf
+IR Receiver,TSOP38238,1,https://www.vishay.com/docs/82491/tsop382.pdf
+Reset Button,TS06-667-25-R-160-G-SMT-TR,1,https://eu.mouser.com/datasheet/2/1628/ts06-3511273.pdf
+DC Jack,KLDHCX-0202-BP-LT,1,https://eu.mouser.com/datasheet/2/222/KLDHCX_0202_x_LT-1222695.pdf
+Green WiFi LED,HSMG-C170,1,https://eu.mouser.com/datasheet/2/678/AV02_0551EN_DS_HSMx_Cxxx_25Mar2022-1827675.pdf
+Blue Rx/Tx LED,HSMD-C170,1,https://eu.mouser.com/datasheet/2/678/AV02_0551EN_DS_HSMx_Cxxx_25Mar2022-1827675.pdf
+LED Resistor 56R,CRCW080556R0FKTA,2,https://www.vishay.com/docs/20008/dcrcw.pdf
