@@ -50,7 +50,10 @@ namespace EEPROMUtils{
         bool success = false;
         if(loadConfig()){
             Serial.println("[EEPROM][INFO] Updating Wifi Credentials to EEPROM memory...");
-        
+
+            memset(&eeprom_config.ssid, '\0', sizeof(eeprom_config.ssid));
+            memset(&eeprom_config.password, '\0', sizeof(eeprom_config.password));
+
             strncpy(eeprom_config.ssid, wifi_credentials.ssid, strlen(wifi_credentials.ssid));
             strncpy(eeprom_config.password, wifi_credentials.password, strlen(wifi_credentials.password));
             eeprom_config.run_server = false;
