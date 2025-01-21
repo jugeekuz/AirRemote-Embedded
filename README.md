@@ -11,9 +11,9 @@
 
 Turn your old remote-controlled devices into smart devices! With AirRemote, you can turn any legacy device that can be controlled by an IR remote, into a remotely accesible smart device.
 
-<div style="text-align:left; margin-left:60px;">
+<p align="center">
     <img src="./assets/air-remote-demo-short.gif" alt="AirRemote Short Demo" width="320">
-</div>
+</p>
 
 
 --- 
