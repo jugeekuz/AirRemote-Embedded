@@ -95,8 +95,9 @@ If there is an error during configuration, restart the device and follow the sam
 ---
 
 ## 📜 License
-Licensed under the MIT License.
-🔗 View License Details 
+Licensed under the GPL V3.0 License.
+<a href="https://github.com/jugeekuz/AirRemote-Embedded/blob/master/LICENSE">🔗 View License Details </a>
+
 
 ---
 
