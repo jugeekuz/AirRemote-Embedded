@@ -7,8 +7,6 @@
   <h2>AirRemote Embedded Repository</h2>
 </p>
 
----
-
 Turn your old remote-controlled devices into smart devices! With AirRemote, you can turn any legacy device that can be controlled by an IR remote, into a remotely accesible smart device.
 
 ![AirRemote Demo]()
