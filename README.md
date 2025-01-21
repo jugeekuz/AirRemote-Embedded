@@ -1,4 +1,4 @@
-<div style="text-align: center;">
+<div style="align:center;">
   <img src="assets/logo-black.png#gh-light-mode-only" alt="AirRemote Logo">
   <img src="assets/logo-white.png#gh-dark-mode-only" alt="AirRemote Logo">
 </div>
