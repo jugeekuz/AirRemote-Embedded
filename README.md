@@ -42,11 +42,6 @@ The **AirRemote** project is divided into three main components. Each part conta
 - [**Frontend:**](https://github.com/jugeekuz/AirRemote-Frontend) 
     - A React JS project providing an application for managing devices, saving IR commands, authenticating users and creating powerful automation routines—all accessible through a sleek web interface.
 
-## 🎥 Demo
-Check out the AirRemote in action:
-
-[![Watch the Demo]()](https://www.youtube.com/watch?v=example)
-
 ---
 
 ## ⚙️ Installation and Setup
