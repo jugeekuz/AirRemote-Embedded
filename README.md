@@ -1,6 +1,6 @@
 <p align="center">
-  <img width="300" src="assets/logo-black.png#gh-light-mode-only" alt="AirRemote Logo">
-  <img width="300" src="assets/logo-white.png#gh-dark-mode-only" alt="AirRemote Logo">
+  <img width="340" src="assets/logo-black.png#gh-light-mode-only" alt="AirRemote Logo">
+  <img width="340" src="assets/logo-white.png#gh-dark-mode-only" alt="AirRemote Logo">
 </p>
 <h2 align="center">AirRemote Embedded Repository ⚡</h2>
 <p align="center">
