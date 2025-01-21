@@ -3,9 +3,7 @@
   <img width="300" src="assets/logo-white.png#gh-dark-mode-only" alt="AirRemote Logo">
 </p>
 
-<p align="center">
-  <h2>AirRemote Embedded Repository</h2>
-</p>
+<h2 align="center">AirRemote Embedded Repository ⚡</h2>
 
 Turn your old remote-controlled devices into smart devices! With AirRemote, you can turn any legacy device that can be controlled by an IR remote, into a remotely accesible smart device.
 
