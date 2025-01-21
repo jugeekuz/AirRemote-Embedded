@@ -18,7 +18,7 @@ Turn your old remote-controlled devices into smart devices! With AirRemote, you 
 ## 📝  Description
 
 
-AirRemote is a solution designed to modernize legacy remote-controlled devices by making them smart and remotely accessible. AirRemote operates as a universal remote emulator. It works by capturing the infrared (IR) signals from any remote control—regardless of how rare or obscure—and storing them for later use. The device includes an IR receiver and 8 powerful IR transmitters, enabling it to decode, save and replay the captured IR signals across a room.
+AirRemote is a solution designed to modernize legacy remote-controlled devices by making them smart and remotely accessible. AirRemote operates as a universal remote emulator. It works by capturing the infrared (IR) signals from any remote control—regardless of how rare or obscure—and storing them for later use. You can then replay those commands remotely through the web interface (or through automated routines) enabling you to perform actions such as open the A/C or your heater on your way back, finding your house in the perfect temperature when you arrive, or just keep all your remotes in one place without needing to search for them every time.
 
 ## 🔧 Features 
 - Record the IR signals by simply pressing the buttons of their existing remote control onto the AirRemote device.
@@ -52,7 +52,7 @@ Check out the AirRemote in action:
 ## ⚙️ Installation and Setup
 
 ### 🔨 Creating AirRemote Device
-
+The AirRemote device includes an IR receiver, enabling it to decode incoming IR commands and 8 powerful IR transmitters, facing in all directions, to replay the captured IR signals across a room wherever your device may be.
 To create the AirRemote board, you can either:
 - Create the PCB, through the Gerber file provided and the parts found under `assets/board/`.
 - Create your own design, through the EasyEDA json file provided under `assets/board/`.
