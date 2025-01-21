@@ -2,8 +2,8 @@
   <img width="300" src="assets/logo-black.png#gh-light-mode-only" alt="AirRemote Logo">
   <img width="300" src="assets/logo-white.png#gh-dark-mode-only" alt="AirRemote Logo">
 </p>
-<h2 align="center">AirRemote Embedded Repository ⚡</h2>
 <p align="center">
+    <h2 align="center">AirRemote Embedded Repository ⚡</h2>
     <a href="/LICENSE"><img alt="GPL-V3.0 License" src="https://img.shields.io/badge/License-GPLv3-orange.svg"></a>
     <a href="https://github.com/jugeekuz/AirRemote-Embedded/graphs/contributors"><img alt="Contributors" src="https://img.shields.io/github/contributors/jugeekuz/AirRemote-Embedded?color=green"></a>
     <a href="https://www.linkedin.com/in/anastasiosdiamantis"><img alt="Connect on LinkedIn" src="https://img.shields.io/badge/Connect%20on-LinkedIn-blue.svg"></a>
