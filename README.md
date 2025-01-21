@@ -4,7 +4,7 @@
 </p>
 
 <p align="center">
-  ## AirRemote Project Embedded Repository 
+  <h2>AirRemote Embedded Repository</h2>
 </p>
 
 ---
